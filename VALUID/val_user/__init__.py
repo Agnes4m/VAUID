@@ -11,7 +11,7 @@ from ..utils.error_reply import get_error
 from .add_ck import add_cookie
 from .search_player import search_player_with_name
 
-va_user_bind = SV('VA用户绑定')
+va_user_bind = SV('VAL用户绑定')
 va_add_ck = SV('VA添加CK', area='DIRECT')
 
 
@@ -43,13 +43,13 @@ async def send_va_bind_uid_msg(bot: Bot, ev: Event):
 
     if uid and ':' not in uid:
         return await bot.send(
-            '你输入了错误的格式!\n请使用va搜索命令获取正确的UID'
+            '你输入了错误的格式!\n请使用val搜索命令获取正确的UID'
         )
 
     if '绑定' in ev.command:
         if not uid:
             return await bot.send(
-                '该命令需要带上正确的uid!\n如果不知道, 可以使用va搜索命令查询\n如va搜索Wuyi'
+                '该命令需要带上正确的uid!\n如果不知道, 可以使用val搜索命令查询\n如va搜索Wuyi'
             )
         data = await VABind.insert_uid(
             qid, ev.bot_id, uid, ev.group_id, is_digit=False
@@ -58,26 +58,26 @@ async def send_va_bind_uid_msg(bot: Bot, ev: Event):
             bot,
             data,
             {
-                0: f'[VA] 绑定UID{uid}成功！',
-                -1: f'[VA] UID{uid}的位数不正确！',
-                -2: f'[VA] UID{uid}已经绑定过了！',
-                -3: '[VA] 你输入了错误的格式!',
+                0: f'[VAL] 绑定UID{uid}成功！',
+                -1: f'[VAL] UID{uid}的位数不正确！',
+                -2: f'[VAL] UID{uid}已经绑定过了！',
+                -3: '[VAL] 你输入了错误的格式!',
             },
         )
     elif '切换' in ev.command:
         retcode = await VABind.switch_uid_by_game(qid, ev.bot_id, uid)
         if retcode == 0:
-            return await bot.send(f'[VA] 切换UID{uid}成功！')
+            return await bot.send(f'[VAL] 切换UID{uid}成功！')
         else:
-            return await bot.send(f'[VA] 尚未绑定该UID{uid}')
+            return await bot.send(f'[VAL] 尚未绑定该UID{uid}')
     else:
         data = await VABind.delete_uid(qid, ev.bot_id, uid)
         return await send_diff_msg(
             bot,
             data,
             {
-                0: f'[VA] 删除UID{uid}成功！',
-                -1: f'[VA] 该UID{uid}不在已绑定列表中！',
+                0: f'[VAL] 删除UID{uid}成功！',
+                -1: f'[VAL] 该UID{uid}不在已绑定列表中！',
             },
         )
 
@@ -86,9 +86,7 @@ async def send_va_bind_uid_msg(bot: Bot, ev: Event):
 async def send_va_search_msg(bot: Bot, ev: Event):
     name = ev.text.strip()
     if not name:
-        return await bot.send(
-            '必须输入完整的召唤师名称噢！\n例如：va搜索Wuyi'
-        )
+        return await bot.send('必须输入完整的召唤师名称噢！\n例如：va搜索Wuyi')
 
     players = await search_player_with_name(name)
 

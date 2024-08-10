@@ -1,22 +1,18 @@
 import json as js
-import urllib.parse
+import random
 from copy import deepcopy
-from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Union, cast
 
 import aiofiles
 from aiohttp import FormData
 from gsuid_core.logger import logger
 from gsuid_core.utils.download_resource.download_file import download
-from httpx import AsyncClient
+from httpx import AsyncClient, head
 from PIL import Image
 
-from ..database.models import VAUser
-from .api import (
-    SearchAPI,
-    SummonerAPI,
-)
-from .models import PlayerInfo, SummonerInfo
+from ..database.models import VALUser
+from .api import CardAPI, SearchAPI, SummonerAPI, ValCardAPI
+from .models import CardDetail, CardInfo, PlayerInfo, SummonerInfo
 
 
 class WeGameApi:
@@ -28,12 +24,25 @@ class WeGameApi:
         'Chrome/91.0.4472.114 Mobile Safari/537.36',
         'Content-Type': 'application/json; charset=utf-8',
     }
-   
+
+    async def get_token(self) -> List[str]:
+        user_list = await VALUser.get_all_user()
+        if user_list:
+            user: VALUser = random.choice(user_list)
+            if user.uid is None:
+                raise Exception('No valid uid')
+            token = await VALUser.get_user_cookie_by_uid(user.uid)
+            if token is None:
+                raise Exception('No valid cookie')
+            return [user.uid, token]
+        return ["", ""]
+
     async def search_player(
         self,
         key_word: str,
     ):
-        """使用名称来搜索玩家"""
+        """使用名称来搜索玩家
+        可以获取uid"""
         data = await self._va_request(
             SearchAPI,
             params={'keyWord': key_word, 'app_scope': 'lol'},
@@ -42,15 +51,20 @@ class WeGameApi:
             return data
         return cast(List[PlayerInfo], data['data']['searchInfo'])
 
+
     async def get_player_info(self, uid: str):
-        """使用uid来获取玩家信息"""
+        """使用uid来获取玩家信息,可以获取secen"""
+        opuid, ck = await self.get_token()
+        
+        self._HEADER['cookie'] = ck
         data = await self._va_request(
             SummonerAPI,
+            header=self._HEADER,
             json={
-                'opUuid': uid,
+                'opUuid': opuid,
                 'isNeedGameInfo': 1,
-                'isNeedMedal': 0,
-                'isNeedCommunityInfo': '0',
+                'isNeedMedal': 1,
+                'isNeedCommunityInfo': '1',
                 'clientType': 9,
                 'isNeedDress': 1,
                 'isNeedRemark': 1,
@@ -58,7 +72,7 @@ class WeGameApi:
                     {
                         'uuid': uid,
                     }
-                ]
+                ],
             },
         )
         if isinstance(data, int):
@@ -67,6 +81,37 @@ class WeGameApi:
             return cast(str, data['data'])
         return cast(List[SummonerInfo], data['data'])
 
+    async def get_player_card(self, uid: str):
+        """获取玩家卡片信息
+        不过大多是图片的url
+        可以获取secen
+        """
+        data = await self._va_request(
+            CardAPI,
+            json={
+                'uuid': uid,
+                'jump_key': 'mine',
+            },
+        )
+        if isinstance(data, int):
+            return data
+        if data["result"] != 0:
+            return cast(str, data['data'])
+        return cast(CardInfo, data['data'])
+
+    async def get_detail_card(self, secen: str):
+        """用secen获取玩家卡片信息"""
+        data = await self._va_request(
+            ValCardAPI,
+            json={
+                'scene': secen
+            },
+        )
+        if isinstance(data, int):
+            return data
+        if data["result"] != 0:
+            return cast(str, data['data'])
+        return cast(CardDetail, data['data'])
 
     async def _va_request(
         self,
@@ -85,7 +130,7 @@ class WeGameApi:
                 uid = json['id']
             else:
                 uid = ' 9999'
-            ck = await VAUser.get_random_cookie(uid)
+            ck = await VALUser.get_random_cookie(uid)
             if ck:
                 header['Cookie'] = ck
             else:
