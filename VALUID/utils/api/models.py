@@ -63,9 +63,9 @@ class InfoBody(TypedDict):
     userGender: str
     '''是否未被封号'''
     userDesc: str
-    '''qq昵称'''
+    '''掌盟账号'''
     userAppNum: str
-    '''掌瓦自定义id'''
+    '''qq号'''
     showIndex: int
     '''是否展示信息'''
     focus: bool

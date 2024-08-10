@@ -1,6 +1,7 @@
 import json as js
 import random
 from copy import deepcopy
+from re import S
 from typing import Any, Dict, List, Literal, Optional, Union, cast
 
 import aiofiles
@@ -12,7 +13,7 @@ from PIL import Image
 
 from ..database.models import VALUser
 from .api import CardAPI, SearchAPI, SummonerAPI, ValCardAPI
-from .models import CardDetail, CardInfo, PlayerInfo, SummonerInfo
+from .models import CardDetail, CardInfo, InfoBody, SummonerInfo
 
 
 class WeGameApi:
@@ -43,14 +44,31 @@ class WeGameApi:
     ):
         """使用名称来搜索玩家
         可以获取uid"""
-        data = await self._va_request(
+        data_1 = await self._va_request(
             SearchAPI,
-            params={'keyWord': key_word, 'app_scope': 'lol'},
+            params={
+                'keyWord': key_word,
+                'app_scope': 'lol',
+                "searchType": "1",
+                "page": "0",
+                "pageSize": "10",
+                },
         )
-        if isinstance(data, int):
-            return data
-        return cast(List[PlayerInfo], data['data']['searchInfo'])
-
+        data_2 = await self._va_request(
+            SearchAPI,
+            params={
+                'keyWord': key_word,
+                'app_scope': 'lol',
+                'searchType': '1',
+                'page': '1',
+                'pageSize': '10'
+                },
+        )
+        if isinstance(data_1, int):
+            return data_1
+        out_1 = cast(List[InfoBody], data_1['data']['userList'])
+        out_2 = cast(List[InfoBody], data_2['data']['userList'])
+        return out_1 + out_2
 
     async def get_player_info(self, uid: str):
         """使用uid来获取玩家信息,可以获取secen"""
@@ -159,10 +177,14 @@ class WeGameApi:
                         'result': {'error_code': -999, 'data': _raw_data}
                     }
             logger.debug(raw_data)
-            if (
-                'result' in raw_data
-                and 'error_code' in raw_data['result']
-                and raw_data['result']['error_code'] != 0
-            ):
-                return raw_data['result']['error_code']
+            print(raw_data)
+            try:
+                if (
+                    'result' in raw_data
+                    and 'error_code' in raw_data['result']
+                    and raw_data['result']['error_code'] != 0
+                ):
+                    return raw_data['result']['error_code']
+            except TypeError:
+                pass
             return raw_data

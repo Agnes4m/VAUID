@@ -31,7 +31,7 @@ readme = "README.md"
 homepage = "https://github.com/Agnes4m/VAUID"
 repository = "https://github.com/Agnes4m/VAUID"
 documentation = "https://docs.sayu-bot.com/"
-packages = [{ include = "VAUID" }]
+packages = [{ include = "VALUID" }]
 exclude = ["tests", "deploy"]
 
 [tool.poetry.urls]
