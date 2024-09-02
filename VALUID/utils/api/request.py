@@ -1,19 +1,18 @@
-import json as js
 import random
+import json as js
 from copy import deepcopy
-from re import S
-from typing import Any, Dict, List, Literal, Optional, Union, cast
+from typing import Any, Dict, List, Union, Literal, Optional, cast
 
 import aiofiles
+from PIL import Image
 from aiohttp import FormData
+from httpx import AsyncClient, head
 from gsuid_core.logger import logger
 from gsuid_core.utils.download_resource.download_file import download
-from httpx import AsyncClient, head
-from PIL import Image
 
 from ..database.models import VALUser
-from .api import CardAPI, SearchAPI, SummonerAPI, ValCardAPI
-from .models import CardDetail, CardInfo, InfoBody, SummonerInfo
+from .api import CardAPI, SearchAPI, ValCardAPI, SummonerAPI
+from .models import CardInfo, InfoBody, CardDetail, SummonerInfo
 
 
 class WeGameApi:
@@ -52,7 +51,7 @@ class WeGameApi:
                 "searchType": "1",
                 "page": "0",
                 "pageSize": "10",
-                },
+            },
         )
         data_2 = await self._va_request(
             SearchAPI,
@@ -61,8 +60,8 @@ class WeGameApi:
                 'app_scope': 'lol',
                 'searchType': '1',
                 'page': '1',
-                'pageSize': '10'
-                },
+                'pageSize': '10',
+            },
         )
         if isinstance(data_1, int):
             return data_1
@@ -73,7 +72,7 @@ class WeGameApi:
     async def get_player_info(self, uid: str):
         """使用uid来获取玩家信息,可以获取secen"""
         opuid, ck = await self.get_token()
-        
+
         self._HEADER['cookie'] = ck
         data = await self._va_request(
             SummonerAPI,
@@ -121,9 +120,7 @@ class WeGameApi:
         """用secen获取玩家卡片信息"""
         data = await self._va_request(
             ValCardAPI,
-            json={
-                'scene': secen
-            },
+            json={'scene': secen},
         )
         if isinstance(data, int):
             return data

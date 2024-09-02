@@ -1,8 +1,10 @@
+from typing import Optional
+
 from gsuid_core.sv import SV
 from gsuid_core.bot import Bot
 from gsuid_core.models import Event
 from gsuid_core.utils.database.api import get_uid
-from typing import Optional
+
 from ..utils.error_reply import UID_HINT
 from ..utils.database.models import VALBind
 from .draw_val_battle_list import draw_va_battle_list_img
