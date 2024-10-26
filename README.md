@@ -1,3 +1,5 @@
+
+<!-- markdownlint-disable MD033 -->
 # VALUID
 
 <!-- <p align="center">
@@ -19,7 +21,7 @@
 
 ## 丨安装方式
 
-1. 发送`core安装插件VALUID`
+1. 发送`core安装插件VAUID`
 2. 发送`gs重启`应用插件
 
 ## 丨功能

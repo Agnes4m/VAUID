@@ -1,15 +1,12 @@
 import json as js
 import random
 from copy import deepcopy
-from re import S
 from typing import Any, Dict, List, Literal, Optional, Union, cast
 
-import aiofiles
 from aiohttp import FormData
 from gsuid_core.logger import logger
-from gsuid_core.utils.download_resource.download_file import download
-from httpx import AsyncClient, head
-from PIL import Image
+# from gsuid_core.utils.download_resource.download_file import download
+from httpx import AsyncClient
 
 from ..database.models import VALUser
 from .api import CardAPI, SearchAPI, SummonerAPI, ValCardAPI
@@ -54,30 +51,19 @@ class WeGameApi:
                 "pageSize": "10",
                 },
         )
-        data_2 = await self._va_request(
-            SearchAPI,
-            params={
-                'keyWord': key_word,
-                'app_scope': 'lol',
-                'searchType': '1',
-                'page': '1',
-                'pageSize': '10'
-                },
-        )
+
         if isinstance(data_1, int):
             return data_1
-        out_1 = cast(List[InfoBody], data_1['data']['userList'])
-        out_2 = cast(List[InfoBody], data_2['data']['userList'])
-        return out_1 + out_2
+        return cast(List[InfoBody], data_1['data']['userList'])
 
     async def get_player_info(self, uid: str):
         """使用uid来获取玩家信息,可以获取secen"""
         opuid, ck = await self.get_token()
-        
-        self._HEADER['cookie'] = ck
+        header = self._HEADER
+        header['cookie'] = ck
         data = await self._va_request(
             SummonerAPI,
-            header=self._HEADER,
+            header=header,
             json={
                 'opUuid': opuid,
                 'isNeedGameInfo': 1,
@@ -177,7 +163,7 @@ class WeGameApi:
                         'result': {'error_code': -999, 'data': _raw_data}
                     }
             logger.debug(raw_data)
-            print(raw_data)
+            # print(raw_data)
             try:
                 if (
                     'result' in raw_data
