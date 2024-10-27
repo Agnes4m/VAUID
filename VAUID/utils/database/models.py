@@ -1,15 +1,15 @@
 from typing import Optional
 
-from gsuid_core.utils.database.base_models import Bind, User
-from gsuid_core.webconsole.mount_app import GsAdminModel, PageSchema, site
 from sqlmodel import Field
+from gsuid_core.utils.database.base_models import Bind, User
+from gsuid_core.webconsole.mount_app import PageSchema, GsAdminModel, site
 
 
-class VALBind(Bind, table=True):
+class VABind(Bind, table=True):
     uid: Optional[str] = Field(default=None, title='VAUID')
 
 
-class VALUser(User, table=True):
+class VAUser(User, table=True):
     uid: Optional[str] = Field(default=None, title='VAUID')
 
 
@@ -17,21 +17,21 @@ class VALUser(User, table=True):
 class VABindadmin(GsAdminModel):
     pk_name = 'id'
     page_schema = PageSchema(
-        label='VAL绑定管理',
+        label='VA绑定管理',
         icon='fa fa-users',
     )  # type: ignore
 
     # 配置管理模型
-    model = VALBind
+    model = VABind
 
 
 @site.register_admin
 class VAUseradmin(GsAdminModel):
     pk_name = 'id'
     page_schema = PageSchema(
-        label='VAL用户管理',
+        label='VA用户管理',
         icon='fa fa-users',
     )  # type: ignore
 
     # 配置管理模型
-    model = VALUser
+    model = VAUser

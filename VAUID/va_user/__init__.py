@@ -1,26 +1,29 @@
-from typing import Dict
-
-from sqlalchemy.sql.functions import user
-
-from gsuid_core.bot import Bot
-from gsuid_core.message_models import Button
-from gsuid_core.models import Event
 from gsuid_core.sv import SV
+from gsuid_core.bot import Bot
+from gsuid_core.models import Event
+from gsuid_core.message_models import Button
 from gsuid_core.utils.message import send_diff_msg
 
-from ..utils.database.models import VABind
+from .add_ck import add_uid, add_cookie
 from ..utils.error_reply import get_error
-from .add_ck import add_cookie
+from ..utils.database.models import VABind
 from .search_player import search_player_with_name
 
 va_user_bind = SV('VA用户绑定')
 va_add_ck = SV('VA添加CK', area='DIRECT')
+va_add_uids = SV('VA添加UID', area='DIRECT')
 
 
 @va_add_ck.on_prefix(('添加CK', '添加ck'))
 async def send_va_add_ck_msg(bot: Bot, ev: Event):
     ck = ev.text.strip()
     await bot.send(await add_cookie(ev, ck))
+
+
+@va_add_uids.on_prefix(('添加uid', '添加uid'))
+async def send_csgo_add_uid_msg(bot: Bot, ev: Event):
+    tk = ev.text.strip()
+    await bot.send(await add_uid(ev, tk))
 
 
 @va_user_bind.on_command(
@@ -89,7 +92,7 @@ async def send_va_search_msg(bot: Bot, ev: Event):
     name = ev.text.strip()
     if not name:
         return await bot.send('必须输入完整的名称噢！\n例如：va搜索恶意引航者')
-    
+
     players = await search_player_with_name(name)
     print(players)
     if not players or players == 8000004:
@@ -98,15 +101,22 @@ async def send_va_search_msg(bot: Bot, ev: Event):
         )
     if isinstance(players, int):
         buttons = None
-        im = get_error(players)  
-        await bot.send_option(im, buttons)  
+        im = get_error(players)
+        await bot.send_option(im, buttons)
     else:
 
-        buttons = [Button(f"✏️绑定{one_player['userId']}", f"va绑定{one_player['userId']}") for one_player in players]
+        buttons = [
+            Button(
+                f"✏️绑定{one_player['userId']}", f"va绑定{one_player['userId']}"
+            )
+            for one_player in players
+        ]
         out_msg = []
         for one_player in players:
-            out_msg.append(f"""昵称: {one_player['userName']} | ({one_player['userAppNum']})
-uid: {one_player['userId']}""")
+            out_msg.append(
+                f"""昵称: {one_player['userName']} | {one_player['userAppNum']})
+uid: {one_player['userId']}"""
+            )
         print(out_msg)
         im = '\n'.join(out_msg)
         print(im)

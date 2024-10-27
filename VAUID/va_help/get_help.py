@@ -17,6 +17,7 @@ ICON = TEXT_PATH / 'icon.png'
 
 PREFIX = get_plugin_prefix('VAUID')
 
+
 def get_footer():
     return Image.open(TEXT_PATH / 'footer.png')
 

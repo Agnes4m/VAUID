@@ -1,7 +1,6 @@
 from pathlib import Path
 
 from PIL import ImageFont
-
 from gsuid_core.utils.fonts.fonts import core_font as va_font
 
 FONT_MAIN_PATH = Path(__file__).parent / 'fonts/loli.ttf'

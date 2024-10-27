@@ -1,16 +1,17 @@
-import json as js
 import random
+import json as js
 from copy import deepcopy
-from typing import Any, Dict, List, Literal, Optional, Union, cast
+from typing import Any, Dict, List, Union, Literal, Optional, cast
 
 from aiohttp import FormData
-from gsuid_core.logger import logger
+
 # from gsuid_core.utils.download_resource.download_file import download
 from httpx import AsyncClient
+from gsuid_core.logger import logger
 
-from ..database.models import VALUser
-from .api import CardAPI, SearchAPI, SummonerAPI, ValCardAPI
-from .models import CardDetail, CardInfo, InfoBody, SummonerInfo
+from ..database.models import VAUser
+from .api import CardAPI, SearchAPI, ValCardAPI, SummonerAPI
+from .models import CardInfo, InfoBody, CardDetail, SummonerInfo
 
 
 class WeGameApi:
@@ -24,12 +25,12 @@ class WeGameApi:
     }
 
     async def get_token(self) -> List[str]:
-        user_list = await VALUser.get_all_user()
+        user_list = await VAUser.get_all_user()
         if user_list:
-            user: VALUser = random.choice(user_list)
+            user: VAUser = random.choice(user_list)
             if user.uid is None:
                 raise Exception('No valid uid')
-            token = await VALUser.get_user_cookie_by_uid(user.uid)
+            token = await VAUser.get_user_cookie_by_uid(user.uid)
             if token is None:
                 raise Exception('No valid cookie')
             return [user.uid, token]
@@ -49,7 +50,7 @@ class WeGameApi:
                 "searchType": "1",
                 "page": "0",
                 "pageSize": "10",
-                },
+            },
         )
 
         if isinstance(data_1, int):
@@ -61,20 +62,24 @@ class WeGameApi:
         opuid, ck = await self.get_token()
         header = self._HEADER
         header['cookie'] = ck
+        logger.info(header)
+        logger.info(opuid)
+        logger.info(uid)
         data = await self._va_request(
             SummonerAPI,
             header=header,
             json={
                 'opUuid': opuid,
                 'isNeedGameInfo': 1,
-                'isNeedMedal': 1,
-                'isNeedCommunityInfo': '1',
+                'isNeedMedal': 0,
+                'isNeedCommunityInfo': 1,
                 'clientType': 9,
                 'isNeedDress': 1,
                 'isNeedRemark': 1,
                 'uuidSceneList': [
                     {
                         'uuid': uid,
+                        'scene': "",
                     }
                 ],
             },
@@ -82,8 +87,9 @@ class WeGameApi:
         if isinstance(data, int):
             return data
         if data["msg"] != 'success':
+            logger.info(data)
             return cast(str, data['data'])
-        return cast(List[SummonerInfo], data['data'])
+        return cast(SummonerInfo, data['data'][0])
 
     async def get_player_card(self, uid: str):
         """获取玩家卡片信息
@@ -107,9 +113,7 @@ class WeGameApi:
         """用secen获取玩家卡片信息"""
         data = await self._va_request(
             ValCardAPI,
-            json={
-                'scene': secen
-            },
+            json={'scene': secen},
         )
         if isinstance(data, int):
             return data
@@ -134,7 +138,7 @@ class WeGameApi:
                 uid = json['id']
             else:
                 uid = ' 9999'
-            ck = await VALUser.get_random_cookie(uid)
+            ck = await VAUser.get_random_cookie(uid)
             if ck:
                 header['Cookie'] = ck
             else:

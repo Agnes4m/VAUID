@@ -1,4 +1,4 @@
-from typing import  List, TypedDict
+from typing import List, Optional, TypedDict
 
 
 class ResultInfo(TypedDict):
@@ -18,13 +18,20 @@ class GameInfo(TypedDict):
     roleName: str
     '''游戏名称# 114514'''
     gameShortName: str
-    '''VAL'''
+    '''VA'''
     level: int
     '''游戏等级'''
+    tier: Optional[str]
+    '''段位'''
     gameColor: str
     '''游戏颜色？'''
+    content: Optional[str]
+    '''游戏段位内容'''
+    gameId: Optional[str]
+    '''不知道'''
+
     league_point: str
-    '''大概是账户里现有氪金货币'''
+    '''当前段位分数'''
     role_identity: str
     '''role_id用途未知'''
 
@@ -40,7 +47,7 @@ class SummonerInfo(TypedDict):
     '''背景图url'''
     appNum: int
     '''qq号'''
-    gameinfolist: List[GameInfo]
+    gameInfoList: List[GameInfo]
 
 
 class FeedBase(TypedDict):
@@ -102,9 +109,11 @@ class RoleInfo(TypedDict):
     my_roleid: str
     '''角色roleid'''
 
+
 class ReportInfo(TypedDict):
     name: str
     '''报告名称'''
+
 
 class Tool(TypedDict):
     title: str
@@ -150,7 +159,7 @@ class CardUrl(TypedDict):
     '''分享或复制按钮'''
     qr_code_url: str
     '''二维码'''
-    
+
 
 class CardInfo(TypedDict):
     has_role: int
@@ -168,15 +177,15 @@ class CardInfo(TypedDict):
     bg_header_layer_url: str
     '''背景头图'''
     card: CardUrl
-    
-    
+
+
 class tc(TypedDict):
     title: str
     '''标题'''
     content: str
     '''内容'''
-    
-    
+
+
 class ListInfo(TypedDict):
     list: List[tc]
     image_url: str
@@ -185,8 +194,8 @@ class ListInfo(TypedDict):
     '''标题'''
     high_light: str
     '''高亮'''
-    
-    
+
+
 class CardDetail(TypedDict):
     left_data: ListInfo
     '''左边数据
