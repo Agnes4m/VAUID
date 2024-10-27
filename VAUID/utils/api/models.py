@@ -128,6 +128,31 @@ class Tool(TypedDict):
     '''报告信息'''
 
 
+class TitleContent(TypedDict):
+    title: str
+    '''标题'''
+    content: str
+    '''内容'''
+
+
+class LeftData(TypedDict):
+    list: List[TitleContent]
+    image_url: str
+    '''段位图片'''
+    title: str
+    '''段位名称'''
+
+
+class RightData(TypedDict):
+    list: List[TitleContent]
+    image_url: str
+    '''武器图片'''
+    title: str
+    '''删除武器内容'''
+    high_light: str
+    '''高亮武器'''
+
+
 class CardUrl(TypedDict):
     bg_main_url: str
     '''背景图片'''
@@ -156,9 +181,21 @@ class CardUrl(TypedDict):
     hero_name: str
     '''英雄名称'''
     share_or_copy_url: str
-    '''分享或复制按钮'''
+    '''分享或复制按钮url'''
     qr_code_url: str
     '''二维码'''
+    left_data: Optional[LeftData]
+    middle_data: Optional[TitleContent]
+    '''KAST'''
+    right_data: Optional[RightData]
+    round_data: Optional[TitleContent]
+    '''回合胜率'''
+    card_switch_tips: str
+    '''无'''
+    is_vip: int
+    '''0'''
+    tab: dict
+    '''按钮相关参数'''
 
 
 class CardInfo(TypedDict):

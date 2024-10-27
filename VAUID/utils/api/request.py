@@ -87,7 +87,6 @@ class WeGameApi:
         if isinstance(data, int):
             return data
         if data["msg"] != 'success':
-            logger.info(data)
             return cast(str, data['data'])
         return cast(SummonerInfo, data['data'][0])
 
@@ -103,6 +102,7 @@ class WeGameApi:
                 'jump_key': 'mine',
             },
         )
+        logger.info(data)
         if isinstance(data, int):
             return data
         if data["result"] != 0:
