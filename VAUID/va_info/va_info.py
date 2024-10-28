@@ -1,11 +1,18 @@
 # from pathlib import Path
-from typing import Union
+from typing import List, Union
 
-from loguru import logger
+from gsuid_core.logger import logger
 
+from .utils import save_img
 from ..utils.va_api import va_api
 from ..utils.error_reply import get_error
-from ..utils.api.models import CardInfo, SummonerInfo
+from ..utils.api.models import (
+    GunInfo,
+    MapInfo,
+    CardInfo,
+    CardOnline,
+    SummonerInfo,
+)
 
 # from PIL import Image, ImageDraw
 # from gsuid_core.logger import logger
@@ -18,7 +25,7 @@ from ..utils.api.models import CardInfo, SummonerInfo
 async def get_va_info_img(uid: str) -> Union[str, bytes]:
     detail = await va_api.get_player_info(uid)
 
-    # logger.info(detail)
+    logger.debug(detail)
     if isinstance(detail, int):
         return get_error(detail)
     if isinstance(detail, str):
@@ -30,18 +37,38 @@ async def get_va_info_img(uid: str) -> Union[str, bytes]:
     if isinstance(card, str):
         return card
 
+    scene = card['role_info']['friend_scene']
+    logger.info(f'scene: {scene}')
+    seeson_id = card['role_info']['session_id']
+    logger.info(f'seeson_id: {seeson_id}')
+    online = await va_api.get_online(uid, scene)
+
+    if isinstance(online, int):
+        return get_error(online)
+
+    gun = await va_api.get_gun(scene, seeson_id)
+    if isinstance(gun, int):
+        return get_error(gun)
+
+    map_ = await va_api.get_map(scene, seeson_id)
+    if isinstance(map_, int):
+        return get_error(map_)
+
     if len(detail) == 0:
         return "报错了，检查控制台"
-    return await draw_va_info_img(detail, card)
+    return await draw_va_info_img(detail, card, online, gun, map_)
 
 
 async def draw_va_info_img(
-    detail: SummonerInfo, card: CardInfo
+    detail: SummonerInfo,
+    card: CardInfo,
+    online: CardOnline,
+    gun: List[GunInfo],
+    map_: List[MapInfo],
 ) -> bytes | str:
-    if not detail:
+    if not card:
         return "token已过期"
-    logger.info(detail)
-
+    # logger.info(detail)
     # game_info = detail['gameInfoList'][0]
     card_info = card['card']
     if (
@@ -50,8 +77,39 @@ async def draw_va_info_img(
         or card_info['right_data'] is None
     ):
         return "未能查到战绩"
+
+    # 图片相关 card
+    await save_img(card['layer_big'], "bg")
+    await save_img(card['layer_small'], "bg")
+    await save_img(card['bg_header_layer_url'], "bg")
+    await save_img(card_info['bg_main_url'], "bg")
+    await save_img(card_info['bg_bottom_layer_url'], "bg")  # 评价
+    logger.info(card_info['bg_bottom_layer_url'])
+    await save_img(card_info['bg_good_red_url'], "bg")
+    await save_img(card_info['bg_hero_name_url'], "bg")
+    await save_img(card_info['head_url'], "head")
+    await save_img(card_info['hero_url'], "hero1")
+    await save_img(card_info['left_data']['image_url'], "rank")
+    await save_img(card_info['right_data']['image_url'], "weapon")
+
+    # 武器图片
+    if gun:
+        for one in gun:
+            await save_img(
+                one['image_url'], "weapon", rename=f"{one['name']}.png"
+            )
+    # 地图
+    logger.info(map_)
+    if map_:
+        for one in map_:
+            logger.info(one['map_icon'])
+            logger.info(one['name'])
+            await save_img(one['map_icon'], "map", rename=f"{one['name']}.png")
+            await save_img(one['best_hero_url'], "hero2")
+
     return f"""--无畏契约个人信息--
 掌萌昵称: {detail['nickName']}
+是否在线: {online['online_text'] if online.get('online_text') else '未知'}
 游戏昵称: {card_info['name']}
 当前段位: {card_info['left_data']['title']}
 游戏时长: {card_info['left_data']['list'][1]['content']}

@@ -10,8 +10,26 @@ from httpx import AsyncClient
 from gsuid_core.logger import logger
 
 from ..database.models import VAUser
-from .api import CardAPI, SearchAPI, ValCardAPI, SummonerAPI
-from .models import CardInfo, InfoBody, CardDetail, SummonerInfo
+from .api import (
+    GunAPI,
+    MapAPI,
+    CardAPI,
+    OnlineAPI,
+    SearchAPI,
+    ValCardAPI,
+    SummonerAPI,
+)
+from .models import (
+    GunInfo,
+    MapInfo,
+    CardInfo,
+    InfoBody,
+    CardDetail,
+    CardOnline,
+    SummonerInfo,
+)
+
+season_id = "dcde7346-4085-de4f-c463-2489ed47983b"
 
 
 class WeGameApi:
@@ -62,9 +80,6 @@ class WeGameApi:
         opuid, ck = await self.get_token()
         header = self._HEADER
         header['cookie'] = ck
-        logger.info(header)
-        logger.info(opuid)
-        logger.info(uid)
         data = await self._va_request(
             SummonerAPI,
             header=header,
@@ -166,7 +181,6 @@ class WeGameApi:
                     raw_data = {
                         'result': {'error_code': -999, 'data': _raw_data}
                     }
-            logger.debug(raw_data)
             # print(raw_data)
             try:
                 if (
@@ -178,3 +192,55 @@ class WeGameApi:
             except TypeError:
                 pass
             return raw_data
+
+    async def get_online(self, uid: str, scene: str):
+
+        _, ck = await self.get_token()
+        header = self._HEADER
+        header['cookie'] = ck
+        data = await self._va_request(
+            OnlineAPI,
+            header=header,
+            json={
+                'uuid': uid,
+                'scene': scene,
+            },
+        )
+        logger.info(data)
+        if isinstance(data, int):
+            return data
+        return cast(CardOnline, data['data'])
+
+    async def get_gun(self, scene: str, seeson_id: str):
+        _, ck = await self.get_token()
+        header = self._HEADER
+        header['cookie'] = ck
+        data = await self._va_request(
+            GunAPI,
+            header=header,
+            json={
+                'scene': scene,
+                'season_id': season_id,
+                'queue_id': "255",
+            },
+        )
+        if isinstance(data, int):
+            return data
+        return cast(List[GunInfo], data['data']['list'])
+
+    async def get_map(self, scene: str, seeson_id: str):
+        _, ck = await self.get_token()
+        header = self._HEADER
+        header['cookie'] = ck
+        data = await self._va_request(
+            MapAPI,
+            header=header,
+            json={
+                'scene': scene,
+                'season_id': season_id,
+                'queue_id': "255",
+            },
+        )
+        if isinstance(data, int):
+            return data
+        return cast(List[MapInfo], data['data']['list'])

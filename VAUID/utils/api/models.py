@@ -249,3 +249,65 @@ class CardDetail(TypedDict):
     '''
     hero_url: str
     hero_name: str
+
+
+class CardOnline(TypedDict):
+    '''在线数据'''
+
+    online_state: int
+    '''是否在线'''
+    online_text: str
+    '''在线文字'''
+    online_color: str
+    '''在线颜色'''
+
+
+class GunInfo(TypedDict):
+    '''武器数据'''
+
+    id: str
+    '''武器id'''
+    name: str
+    '''武器名称'''
+    image_url: str
+    '''武器图片'''
+    kill: str
+    '''击杀数'''
+    kill_head: str
+    '''爆头率'''
+    kill_round: str
+    '''回合击杀'''
+    kill_farthest: str
+    '''最远击杀距离(无单位)'''
+
+
+class MapInfo(TypedDict):
+    '''地图信息'''
+
+    agent_id: str
+    '''地图id'''
+    map_id: str
+    '''地图id路径'''
+    name: str
+    '''地图名称'''
+    map_icon: str
+    '''地图图标'''
+    win_rate: str
+    '''胜率(100.0)'''
+    best_hero_win_rate: str
+    '''最佳英雄胜率(100.0)'''
+    best_hero_url: str
+    '''最佳英雄图标'''
+    kd: str
+    '''kd'''
+    round_score: str
+    '''回合评分'''
+    map_mask_color: str
+    '''地图遮罩颜色
+    linear-gradient(67.11deg,
+            #21414B 10.25%,
+            rgba(65,
+            81,
+            85,
+            0) 81.97%)"
+    '''
