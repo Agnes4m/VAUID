@@ -1,6 +1,5 @@
+from typing import Tuple, Optional
 
-
-from typing import Optional, Tuple
 from PIL import Image
 from gsuid_core.logger import logger
 
@@ -10,7 +9,10 @@ from gsuid_core.utils.image.utils import download_pic_to_image
 
 
 async def save_img(
-    img_url: str, img_type: str, size: Optional[Tuple[int, int]] = None, rename: Optional[str] = None
+    img_url: str,
+    img_type: str,
+    size: Optional[Tuple[int, int]] = None,
+    rename: Optional[str] = None,
 ):
     """下载图片并缓存以读取"""
     img_path = get_res_path("VAUID") / img_type / img_url.split("/")[-1]
@@ -18,7 +20,7 @@ async def save_img(
     if rename is not None:
         img_path = img_path.parent / rename
     map_img = Image.new("RGBA", (200, 600), (0, 0, 0, 255))
-    
+
     if not img_path.is_file():
         for i in range(3):
             try:

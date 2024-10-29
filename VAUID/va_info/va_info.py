@@ -3,6 +3,12 @@ from typing import List, Union
 
 from gsuid_core.logger import logger
 
+# from PIL import Image, ImageDraw
+# from gsuid_core.logger import logger
+# from gsuid_core.utils.image.convert import convert_img
+# from gsuid_core.utils.image.image_tools import easy_paste, draw_pic_with_ring
+from gsuid_core.utils.image.convert import text2pic
+
 from .utils import save_img
 from ..utils.va_api import va_api
 from ..utils.error_reply import get_error
@@ -13,11 +19,6 @@ from ..utils.api.models import (
     CardOnline,
     SummonerInfo,
 )
-
-# from PIL import Image, ImageDraw
-# from gsuid_core.logger import logger
-# from gsuid_core.utils.image.convert import convert_img
-# from gsuid_core.utils.image.image_tools import easy_paste, draw_pic_with_ring
 
 # from ..utils.va_font import va_font_20, va_font_30, va_font_42
 
@@ -94,20 +95,31 @@ async def draw_va_info_img(
 
     # 武器图片
     if gun:
-        for one in gun:
+        gun_msg = "--武器--"
+        for index, one in enumerate(gun, start=1):
             await save_img(
                 one['image_url'], "weapon", rename=f"{one['name']}.png"
             )
+            gun_msg += f"""
+{index}、名称: {one['name']} | 击杀数: {one['kill']} | 爆头率: {one['kill_head']}
+回合击杀: {one['kill_round']} | 最远击杀: {one['kill_farthest']}"""
+    else:
+        gun_msg = "未能查到武器信息"
+
     # 地图
     logger.info(map_)
     if map_:
-        for one in map_:
-            logger.info(one['map_icon'])
-            logger.info(one['name'])
+        map_msg = "--地图--"
+        for index, one in enumerate(map_, start=1):
             await save_img(one['map_icon'], "map", rename=f"{one['name']}.png")
             await save_img(one['best_hero_url'], "hero2")
+            map_msg += f"""
+{index}、名称: {one['name']} | 英雄胜率: {one['best_hero_win_rate']}
+胜率: {one['win_rate']} | KD: {one['kd']} | 回合评分: {one['round_score']}"""
+    else:
+        map_msg = "未能查到地图信息"
 
-    return f"""--无畏契约个人信息--
+    msg = f"""--无畏契约个人信息--
 掌萌昵称: {detail['nickName']}
 是否在线: {online['online_text'] if online.get('online_text') else '未知'}
 游戏昵称: {card_info['name']}
@@ -119,7 +131,11 @@ async def draw_va_info_img(
 擅长武器: {card_info['right_data']['high_light']}
 ACS: {card_info['left_data']['list'][2]['content']}
 KAST: {card_info['middle_data']['content']}
+
+{map_msg}
+
+{gun_msg}
 """
-    # return "输出了"
+    return await text2pic(msg)
 
     # return await convert_img(img)
