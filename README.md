@@ -3,7 +3,7 @@
 # VALUID
 
 <p align="center">
-  <a href="https://github.com/KimigaiiWuyi/VALUID"><img src="./img/logo.png" width="256" height="256" alt="VALUID"></a>
+  <a href="https://github.com/Agnes4m/VALUID"><img src="./img/logo.png" width="256" height="256" alt="VALUID"></a>
 </p>
 <h1 align = "center">VALUID 0.0.1</h1>
 <h4 align = "center">🚧支持QQ群/频道、OneBot、微信、KOOK、Tg、飞书、DoDo、Discord的无畏契约Bot插件🚧</h4>
