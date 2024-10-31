@@ -102,6 +102,7 @@ class WeGameApi:
         if isinstance(data, int):
             return data
         if data["msg"] != 'success':
+            logger.error(f"获取卡片信息失败：{data}")
             return cast(str, data['data'])
         return cast(SummonerInfo, data['data'][0])
 
@@ -189,8 +190,11 @@ class WeGameApi:
                     and raw_data['result']['error_code'] != 0
                 ):
                     return raw_data['result']['error_code']
+
             except TypeError:
                 pass
+            if raw_data['result'] != 0:
+                return raw_data['result']
             return raw_data
 
     async def get_online(self, uid: str, scene: str):
