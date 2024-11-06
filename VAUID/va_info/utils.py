@@ -28,11 +28,12 @@ async def save_img(
                 if map_img.mode != 'RGBA':
                     map_img = map_img.convert('RGBA')
                 if map_img:
-                    map_img.save(img_path)
+                    map_img.save(img_path, "PNG")
                     break
                 logger.warning(f"图片下载错误，正在尝试第{i+2}次")
                 if i == 2:
                     raise Exception("图片下载失败！")
+                map_img = Image.open(img_path)
             except Exception:
                 continue
 

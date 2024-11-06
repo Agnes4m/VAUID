@@ -118,7 +118,7 @@ class WeGameApi:
                 'jump_key': 'mine',
             },
         )
-        logger.info(data)
+        # logger.info(data)
         if isinstance(data, int):
             return data
         if data["result"] != 0:

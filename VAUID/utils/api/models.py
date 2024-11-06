@@ -45,7 +45,7 @@ class SummonerInfo(TypedDict):
     '''用户头像url'''
     backgroundImgUrl: str
     '''背景图url'''
-    appNum: int
+    appNum: str
     '''qq号'''
     gameInfoList: List[GameInfo]
 
@@ -188,7 +188,7 @@ class CardUrl(TypedDict):
     middle_data: Optional[TitleContent]
     '''KAST'''
     right_data: Optional[RightData]
-    round_data: Optional[TitleContent]
+    round_win_rate: Optional[TitleContent]
     '''回合胜率'''
     card_switch_tips: str
     '''无'''
