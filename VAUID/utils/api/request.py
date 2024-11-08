@@ -20,11 +20,11 @@ from .api import (
     SummonerAPI,
 )
 from .models import (
+    Battle,
     GunInfo,
     MapInfo,
     CardInfo,
     InfoBody,
-    CardDetail,
     CardOnline,
     SummonerInfo,
 )
@@ -53,6 +53,19 @@ class WeGameApi:
                 raise Exception('No valid cookie')
             return [user.uid, token]
         return ["", ""]
+
+    async def get_sence(self) -> List[str]:
+        user_list = await VAUser.get_all_user()
+        if user_list:
+            user: VAUser = random.choice(user_list)
+            if user.uid is None:
+                raise Exception('No valid uid')
+            token = await VAUser.get_user_cookie_by_uid(user.uid)
+            stoken = await VAUser.get_user_stoken_by_uid(user.uid)
+            if stoken is None or token is None:
+                raise Exception('No valid cookie')
+            return [user.uid, token, stoken]
+        return ["", "", ""]
 
     async def search_player(
         self,
@@ -135,7 +148,7 @@ class WeGameApi:
             return data
         if data["result"] != 0:
             return cast(str, data['data'])
-        return cast(CardDetail, data['data'])
+        return cast(List[Battle], data['data']['battle_list'])
 
     async def _va_request(
         self,
@@ -215,7 +228,7 @@ class WeGameApi:
             return data
         return cast(CardOnline, data['data'])
 
-    async def get_gun(self, scene: str, seeson_id: str):
+    async def get_gun(self, scene: str):
         _, ck = await self.get_token()
         header = self._HEADER
         header['cookie'] = ck
@@ -232,7 +245,7 @@ class WeGameApi:
             return data
         return cast(List[GunInfo], data['data']['list'])
 
-    async def get_map(self, scene: str, seeson_id: str):
+    async def get_map(self, scene: str):
         _, ck = await self.get_token()
         header = self._HEADER
         header['cookie'] = ck

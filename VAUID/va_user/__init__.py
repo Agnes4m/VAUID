@@ -12,6 +12,7 @@ from .search_player import search_player_with_name
 va_user_bind = SV('VA用户绑定')
 va_add_ck = SV('VA添加CK', area='DIRECT')
 va_add_uids = SV('VA添加UID', area='DIRECT')
+va_add_sk = SV('VA添加UID', area='DIRECT')
 
 
 @va_add_ck.on_prefix(('添加CK', '添加ck'))
@@ -20,10 +21,16 @@ async def send_va_add_ck_msg(bot: Bot, ev: Event):
     await bot.send(await add_cookie(ev, ck))
 
 
-@va_add_uids.on_prefix(('添加uid', '添加uid'))
-async def send_csgo_add_uid_msg(bot: Bot, ev: Event):
+@va_add_uids.on_prefix(('添加uid', '添加UID'))
+async def send_va_add_uid_msg(bot: Bot, ev: Event):
     tk = ev.text.strip()
     await bot.send(await add_uid(ev, tk))
+
+
+# @va_add_sk.on_prefix(('添加scene', '添加SCENE'))
+# async def send_va_add_sk_msg(bot: Bot, ev: Event):
+#     sk = ev.text.strip()
+#     await bot.send(await add_scene(ev, sk))
 
 
 @va_user_bind.on_command(

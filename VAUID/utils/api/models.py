@@ -9,7 +9,7 @@ class ResultInfo(TypedDict):
 class GameInfo(TypedDict):
     uuid: str
     '''用户的id'''
-    sence: str
+    scene: str
     '''用户的sc'''
     gameHeadUrl: str
     '''用户头像'''
@@ -311,3 +311,145 @@ class MapInfo(TypedDict):
             85,
             0) 81.97%)"
     '''
+
+
+class ScoreLevel(TypedDict):
+    '''评分数据'''
+
+    id: int
+    '''评分id, 0'''
+    level: str
+    '''评分评价, B'''
+    title: str
+    '''评分名称'''
+    guide: str
+    '''评分说明'''
+    high_light: str
+    '''高亮评分 | 无'''
+    intent: str
+    icon: str
+    '''评分小图标'''
+    head_icon_win: str
+    '''胜利头像评分小图标'''
+    head_icon_fail: str
+    '''失败头像评分小图标'''
+    head_icon_draw: str
+    '''平局头像评分小图标'''
+    white_icon: str
+    '''白色小图标'''
+
+
+class UsedMap(TypedDict):
+    '''地图信息'''
+
+    id: int
+    '''地图id, 0'''
+    name: str
+    '''地图名称'''
+    e_name: str
+    '''地图英文名称'''
+    icon: str
+    '''地图图标'''
+
+
+class Competitve(TypedDict):
+    '''排位信息'''
+
+    competitive_tier_change_icon: str
+    '''排位变化图标'''
+    competitive_tier_icon: str
+    '''排位图标'''
+    competitive_point_change: str
+    '''排位变化'''
+    competitive_tier_color: str
+    '''排位颜色 #24B7AF'''
+    competitive_tier_change: int
+
+
+class Achievement(TypedDict):
+    '''成就信息'''
+
+    id: str
+    '''成就id'''
+    icon: str
+    '''成就图标130* 40'''
+    width: int
+    '''成就图标宽度'''
+    height: int
+    '''成就图标高度'''
+    desc: str
+    '''成就描述'''
+    aclos_icon: str
+    '''旧版本成就图标'''
+    aclos_desc: str
+    '''旧版本成就描述'''
+
+
+class Battle(TypedDict):
+    '''战斗数据'''
+
+    battle_id: str
+    '''战斗id'''
+    match_id: str
+    '''匹配id'''
+    image_url: str
+    '''使用角色url'''
+    result_title: str
+    '''胜利  |  平局  |  失败'''
+    result_color: str
+    '''颜色 #24B7AF'''
+    hero_name: str
+    '''使用英雄名称'''
+    content: str
+    '''普通模式 | 深寒东港'''
+    kda: str
+    '''kda'''
+    score: str
+    '''回合评分'''
+    score_color: str
+    '''回合评分颜色'''
+    time: str
+    '''时间'''
+    ts: int
+    '''持续时间戳'''
+    intent: str
+    '''游戏内跳转链接'''
+    role_id: str
+    '''角色id'''
+    kda_score: str
+    '''kda分数'''
+    score_avg: str
+    '''平均分数'''
+    kill_death: str
+    '''空值'''
+    game_mode: str
+    '''游戏模式(普通、排位)'''
+    game_mode_icon: str
+    '''游戏模式图标'''
+    used_map: UsedMap
+    round_fail: int
+    '''回合失败次数'''
+    round_won: int
+    '''回合胜利次数'''
+    game_enum: str
+    '''游戏模式 | unrated'''
+    rank: int
+    '''段位'''
+    score_level: ScoreLevel
+    '''评分数据'''
+    is_friend: int
+    '''是否好友'''
+    competitive_tier: Competitve
+    '''排位信息'''
+    achievement: List[Achievement]
+    '''成就信息'''
+
+
+class ValBattle(TypedDict):
+    '''战斗数据'''
+
+    next_baton: str
+    '''下一把武器uid'''
+    battle_list: List[Battle]
+    msg: str
+    '''两个月内的记录'''

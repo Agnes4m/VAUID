@@ -1,8 +1,11 @@
 from typing import Optional
 
 from sqlmodel import Field
+from gsuid_core.utils.database.startup import exec_list
 from gsuid_core.utils.database.base_models import Bind, User
 from gsuid_core.webconsole.mount_app import PageSchema, GsAdminModel, site
+
+exec_list.extend(['ALTER TABLE VAUser ADD COLUMN platform TEXT DEFAULT ""'])
 
 
 class VABind(Bind, table=True):
