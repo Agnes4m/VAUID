@@ -1,3 +1,5 @@
+from typing import Dict
+from turtle import title
 from typing import List, Optional, TypedDict
 
 
@@ -128,15 +130,17 @@ class Tool(TypedDict):
     '''报告信息'''
 
 
-class TitleContent(TypedDict):
+class tc(TypedDict):
     title: str
     '''标题'''
     content: str
     '''内容'''
+    icon_url: str
+    '''图标'''
 
 
 class LeftData(TypedDict):
-    list: List[TitleContent]
+    list: List[tc]
     image_url: str
     '''段位图片'''
     title: str
@@ -144,7 +148,7 @@ class LeftData(TypedDict):
 
 
 class RightData(TypedDict):
-    list: List[TitleContent]
+    list: List[tc]
     image_url: str
     '''武器图片'''
     title: str
@@ -185,10 +189,10 @@ class CardUrl(TypedDict):
     qr_code_url: str
     '''二维码'''
     left_data: Optional[LeftData]
-    middle_data: Optional[TitleContent]
+    middle_data: Optional[tc]
     '''KAST'''
     right_data: Optional[RightData]
-    round_win_rate: Optional[TitleContent]
+    round_win_rate: Optional[tc]
     '''回合胜率'''
     card_switch_tips: str
     '''无'''
@@ -216,11 +220,6 @@ class CardInfo(TypedDict):
     card: CardUrl
 
 
-class tc(TypedDict):
-    title: str
-    '''标题'''
-    content: str
-    '''内容'''
 
 
 class ListInfo(TypedDict):
@@ -453,3 +452,106 @@ class ValBattle(TypedDict):
     battle_list: List[Battle]
     msg: str
     '''两个月内的记录'''
+
+
+
+class Header(TypedDict):
+    '''头部信息'''
+    layout_type: str
+    '''信息id
+    - 1005
+    - 1006 能力图
+    '''
+    title: str
+    tips: List[str]
+    '''提示信息'''
+    isShowIcon: bool
+    '''是否显示图标'''
+    
+    
+class tv(TypedDict):
+    '''变化趋势'''
+    title: str
+    '''标题 | 变化趋势'''
+    values: List[int]
+    '''段位趋势'''
+    heights: List[int]
+    '''段位高度'''
+    x: List[int]
+    '''段位坐标(0123456789)'''
+    y: List[int]
+    '''段位坐标(段位)'''
+    rate: List[List[int]]
+    '''段位坐标(xy)'''
+    max_point: List[int]
+    '''段位最高坐标(xy)'''
+    max_value_text: str
+    '''段位最高名称'''
+    max_value_icon: str
+    '''段位最高图标'''
+    max_value_icon_type: str
+    '''段位最高图标类型'''
+    
+class Radar(TypedDict):
+    '''能力图'''
+    line_color: str
+    fill_color: str
+    sub_tab_name: str
+    '''位置名称 | 决斗 | 先锋 | 控场 | 哨卫'''
+    desc: str
+    data_array: List[str]
+    '''六边形数据值'''
+    proportion_array: List[int]
+    '''六边形数据长度'''
+    desc_array: List[str]
+    '''六边形数据名称'''
+    
+    tips_bg_color: str
+    """个人 #80E47C73"""
+    
+
+class ts(TypedDict):
+    '''段位名称'''
+    title: str  # 名称
+    sub_title: str  # 子名称
+    content: str  # 内容
+    sub_content: str  # 子内容
+    # 命中次数
+
+
+class Body(TypedDict):
+    '''头部信息'''
+    first_list: List[tc]
+    '''
+    - 当前段位 白银
+    - 赛季最高 白银
+    - 近期表现 A
+    '''
+    line_chart_list: List[tv]
+    '''段位趋势 2个'''
+    second_list: List[tc]
+    '''
+    - 胜率
+    - 平均战斗
+    - KAST
+    - 总时长
+    '''
+    # 以上第一个 ， 以下能力图
+    
+    radar_chart: Dict[str, Radar]
+    '''同段位能力图'''
+    player_dict: Radar
+    '''个人能力图'''
+    shooting: List[ts]
+    '''
+    - 精准击败
+    - 身体
+    - 腿部
+    '''
+    
+
+class Vive(TypedDict):
+    """详细信息"""
+    
+    header: Header  # 头部信息
+    body: Body  # 主体信息

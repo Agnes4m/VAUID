@@ -18,6 +18,7 @@ from .api import (
     SearchAPI,
     ValCardAPI,
     SummonerAPI,
+    ViveAPI,
 )
 from .models import (
     Battle,
@@ -251,6 +252,23 @@ class WeGameApi:
         header['cookie'] = ck
         data = await self._va_request(
             MapAPI,
+            header=header,
+            json={
+                'scene': scene,
+                'season_id': season_id,
+                'queue_id': "255",
+            },
+        )
+        if isinstance(data, int):
+            return data
+        return cast(List[MapInfo], data['data']['list'])
+
+    async def get_vive(self, scene: str):
+        _, ck = await self.get_token()
+        header = self._HEADER
+        header['cookie'] = ck
+        data = await self._va_request(
+            ViveAPI,
             header=header,
             json={
                 'scene': scene,
