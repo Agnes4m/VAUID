@@ -14,13 +14,14 @@ from .api import (
     GunAPI,
     MapAPI,
     CardAPI,
+    ViveAPI,
     OnlineAPI,
     SearchAPI,
     ValCardAPI,
     SummonerAPI,
-    ViveAPI,
 )
 from .models import (
+    Vive,
     Battle,
     GunInfo,
     MapInfo,
@@ -272,10 +273,8 @@ class WeGameApi:
             header=header,
             json={
                 'scene': scene,
-                'season_id': season_id,
-                'queue_id': "255",
             },
         )
         if isinstance(data, int):
             return data
-        return cast(List[MapInfo], data['data']['list'])
+        return cast(List[Vive], data['data']['list'])

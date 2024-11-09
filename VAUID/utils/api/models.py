@@ -1,6 +1,4 @@
-from typing import Dict
-from turtle import title
-from typing import List, Optional, TypedDict
+from typing import Dict, List, Optional, TypedDict
 
 
 class ResultInfo(TypedDict):
@@ -218,8 +216,6 @@ class CardInfo(TypedDict):
     bg_header_layer_url: str
     '''背景头图'''
     card: CardUrl
-
-
 
 
 class ListInfo(TypedDict):
@@ -454,9 +450,9 @@ class ValBattle(TypedDict):
     '''两个月内的记录'''
 
 
-
 class Header(TypedDict):
     '''头部信息'''
+
     layout_type: str
     '''信息id
     - 1005
@@ -467,10 +463,11 @@ class Header(TypedDict):
     '''提示信息'''
     isShowIcon: bool
     '''是否显示图标'''
-    
-    
+
+
 class tv(TypedDict):
     '''变化趋势'''
+
     title: str
     '''标题 | 变化趋势'''
     values: List[int]
@@ -491,9 +488,11 @@ class tv(TypedDict):
     '''段位最高图标'''
     max_value_icon_type: str
     '''段位最高图标类型'''
-    
+
+
 class Radar(TypedDict):
     '''能力图'''
+
     line_color: str
     fill_color: str
     sub_tab_name: str
@@ -505,13 +504,14 @@ class Radar(TypedDict):
     '''六边形数据长度'''
     desc_array: List[str]
     '''六边形数据名称'''
-    
+
     tips_bg_color: str
     """个人 #80E47C73"""
-    
+
 
 class ts(TypedDict):
     '''段位名称'''
+
     title: str  # 名称
     sub_title: str  # 子名称
     content: str  # 内容
@@ -521,6 +521,7 @@ class ts(TypedDict):
 
 class Body(TypedDict):
     '''头部信息'''
+
     first_list: List[tc]
     '''
     - 当前段位 白银
@@ -537,7 +538,7 @@ class Body(TypedDict):
     - 总时长
     '''
     # 以上第一个 ， 以下能力图
-    
+
     radar_chart: Dict[str, Radar]
     '''同段位能力图'''
     player_dict: Radar
@@ -548,10 +549,10 @@ class Body(TypedDict):
     - 身体
     - 腿部
     '''
-    
+
 
 class Vive(TypedDict):
     """详细信息"""
-    
+
     header: Header  # 头部信息
     body: Body  # 主体信息
