@@ -6,7 +6,6 @@ SummonerAPI = f"{GOHOST}/user_profile/query/user"
 SearchAPI = f'{GOHOST}/customize_search/search_type_keyword'
 CardAPI = f'{GOHOST}/mine/card/val_card'
 ValCardAPI = f'{GOHOST}/agame/career/record/list?&app_scope=lol'
-SeasonAPI = f'{GOHOST}/agame/career/seasonoverview?&app_scope=lol'
 OnlineAPI = f'{GOHOST}/mine/card/get_val_online'
 GunAPI = f'{GOHOST}/agame/career/performance/gun?&app_scope=lol'
 MapAPI = f'{GOHOST}/agame/career/performance/map?&app_scope=lol'

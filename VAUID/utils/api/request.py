@@ -114,6 +114,7 @@ class WeGameApi:
                 ],
             },
         )
+        logger.info(data)
         if isinstance(data, int):
             return data
         if data["msg"] != 'success':

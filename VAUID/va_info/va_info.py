@@ -28,7 +28,7 @@ TEXTURE = Path(__file__).parent / 'texture2d'
 async def get_va_info_img(uid: str) -> Union[str, bytes]:
     detail = await va_api.get_player_info(uid)
 
-    # logger.debug(detail)
+    logger.info(detail)
     if isinstance(detail, int):
         return get_error(detail)
     if isinstance(detail, str):
@@ -38,9 +38,8 @@ async def get_va_info_img(uid: str) -> Union[str, bytes]:
     sence = detail['gameInfoList'][0]['scene']
 
     card = await va_api.get_player_card(uid)
-    # logger.info(card)
+    logger.info("card")
     if isinstance(card, int):
-        logger.info("card")
         return get_error(card)
     if isinstance(card, str):
         return card
@@ -48,12 +47,11 @@ async def get_va_info_img(uid: str) -> Union[str, bytes]:
     scene = card['role_info']['friend_scene']
 
     cardetail = await va_api.get_detail_card(scene)
+    logger.info("cardetail")
     if isinstance(cardetail, int):
-        logger.info("cardetail")
-        return get_error(cardetail)
+        logger.info(cardetail)
     if isinstance(cardetail, str):
-        logger.info("cardetail")
-        return cardetail
+        logger.info(cardetail)
 
     logger.info(f'scene: {scene}')
     seeson_id = card['role_info']['session_id']
@@ -88,7 +86,7 @@ async def get_va_info_img(uid: str) -> Union[str, bytes]:
 async def draw_va_info_img(
     detail: SummonerInfo,
     card: CardInfo,
-    valcard: List[Battle],
+    valcard: Optional[List[Battle]],
     online: Optional[CardOnline],
     gun: Optional[List[GunInfo]],
     vive: Optional[List[Vive]],
@@ -285,21 +283,21 @@ async def draw_va_info_img(
                 "mm",
             )
             weapon_draw.text(
-                (80, 110),
+                (100, 110),
                 one_gun['kill_head'],
                 (255, 255, 255, 255),
                 va_font_20,
                 "mm",
             )
             weapon_draw.text(
-                (150, 110),
+                (170, 110),
                 one_gun['kill_round'],
                 (255, 255, 255, 255),
                 va_font_20,
                 "mm",
             )
             weapon_draw.text(
-                (150, 100),
+                (240, 100),
                 f"{one_gun['kill_farthest']}",
                 (255, 255, 255, 255),
                 va_font_20,
@@ -362,7 +360,7 @@ async def draw_va_info_img(
             "mm",
         )
     # 战绩
-    if valcard is not None:
+    if valcard is not None and not isinstance(valcard, int):
         battle_y = 150
         for index, one_valcard in enumerate(valcard, start=1):
             if index == 7:
@@ -375,7 +373,7 @@ async def draw_va_info_img(
                 head2_bg = Image.open(TEXTURE / 'green_head.png')
                 result = "win"
             elif one_valcard['result_title'] == '失败':
-                head2_bg = Image.open(TEXTURE / 'green_head.png')
+                head2_bg = Image.open(TEXTURE / 'red_head.png')
 
                 result = "fail"
             else:
@@ -400,7 +398,8 @@ async def draw_va_info_img(
                 result_color,
                 va_font_42,
             )
-            if one_valcard['score']:
+            if one_valcard['score_level'].get("level").strip():
+                hero_name = 280
                 ranks_bg = Image.new('RGBA', (50, 50), (0, 0, 0, 0))
                 ranks_draw = ImageDraw.Draw(ranks_bg)
                 ranks_draw.rounded_rectangle(
@@ -408,11 +407,14 @@ async def draw_va_info_img(
                     radius=5,
                     fill=hex_to_rgba(result_color, alpha=255),
                 )
-                ranks_draw.text(
-                    (500, 20), one_valcard['score'], "white", va_font_20
+                ranks_img = await save_img(
+                    one_valcard['score_level'][f'head_icon_{result}'], "rank"
                 )
-                easy_paste(battle_bg, ranks_bg, (650, 20), "lt")
+                easy_paste(ranks_bg, ranks_img.resize((50, 50)), (0, 0), "lt")
 
+                easy_paste(battle_bg, ranks_bg, (220, 20), "lt")
+            else:
+                hero_name = 230
             # battle_rank_bg = Image.new('RGBA', (50, 50), (0, 0, 0, 0))
             # battle_rank_draw = ImageDraw.Draw(battle_rank_bg)
             # battle_rank_draw.rounded_rectangle(
@@ -434,29 +436,29 @@ async def draw_va_info_img(
             # easy_paste(battle_rank_bg, battle_rank_img, (0, 0), "lt")
             # easy_paste(battle_bg, battle_rank_bg, (250, 20), "lt")
             battle_draw.text(
-                (280, 20), one_valcard['hero_name'], "white", va_font_42
+                (hero_name, 20), one_valcard['hero_name'], "white", va_font_42
             )
             battle_draw.text(
                 (120, 80), one_valcard['content'], "white", va_font_30
             )
 
             battle_draw.text(
-                (500, 20), one_valcard['kda'], "white", va_font_20
+                (500, 25), one_valcard['kda'], "white", va_font_30
             )
 
             if one_valcard['score']:
-                score_bg = Image.new('RGBA', (50, 50), (0, 0, 0, 0))
+                score_bg = Image.new('RGBA', (80, 40), (0, 0, 0, 0))
                 score_draw = ImageDraw.Draw(score_bg)
                 score_draw.rounded_rectangle(
-                    (0, 0, 50, 50),
-                    radius=5,
+                    (0, 0, 80, 40),
+                    radius=15,
                     fill=hex_to_rgba(score_color, alpha=255),
                 )
 
                 score_draw.text(
-                    (500, 20), one_valcard['score'], "white", va_font_20
+                    (40, 20), one_valcard['score'], "white", va_font_20, "mm"
                 )
-                easy_paste(battle_bg, score_bg, (250, 20), "lt")
+                easy_paste(battle_bg, score_bg, (620, 25), "lt")
                 logger.info(one_valcard['score'])
 
             if one_valcard['is_friend'] == 1:
@@ -477,7 +479,7 @@ async def draw_va_info_img(
                     easy_paste(battle_bg, ach_bg, (x, 10), "lt")
                     x -= (ach_bg.size[0] + 10) * inde
             easy_paste(right_bg, battle_bg, (0, battle_y + index * 150), "lt")
-        easy_paste(img, right_bg, (780, 810), "lt")
+    easy_paste(img, right_bg, (780, 810), "lt")
 
     return await convert_img(img)
 
