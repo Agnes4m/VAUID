@@ -1,5 +1,4 @@
-# from pathlib import Path
-import time
+import math
 from pathlib import Path
 from typing import List, Union, Optional
 
@@ -61,7 +60,6 @@ async def get_va_info_img(uid: str) -> Union[str, bytes]:
     if isinstance(online, int):
         logger.error(get_error(online))
         online = None
-        pass
 
     gun = await va_api.get_gun(scene)
     if isinstance(gun, int):
@@ -77,8 +75,7 @@ async def get_va_info_img(uid: str) -> Union[str, bytes]:
 
     vive = await va_api.get_vive(scene)
     if isinstance(vive, int):
-        logger.error(get_error(vive))
-        vive = None
+        return get_error(vive)
 
     if len(detail) == 0:
         return "报错了，检查控制台"
@@ -94,7 +91,7 @@ async def draw_va_info_img(
     online: Optional[CardOnline],
     gun: List[GunInfo],
     hero: List[PFInfo],
-    vive: Optional[List[Vive]],
+    vive: List[Vive],
 ) -> bytes | str:
     if not card:
         return "token已过期"
@@ -313,8 +310,8 @@ async def draw_va_info_img(
         hero_img = await save_img(one_hero['image_url'], "hero2")
 
         head_bg = Image.new('RGBA', (50, 50), "orange")
-        img_draw = ImageDraw.Draw(head_bg)
-        img_draw.rounded_rectangle((0, 0, 50, 50), radius=5, fill="orange")
+        head_draw = ImageDraw.Draw(head_bg)
+        head_draw.rounded_rectangle((0, 0, 50, 50), radius=5, fill="orange")
         easy_paste(head_bg, hero_img.resize((50, 50)), (0, 0), "lt")
         easy_paste(hero_one, head_bg, (50, 35), "cc")
 
@@ -399,6 +396,127 @@ async def draw_va_info_img(
             easy_paste(left_bg, weapon_bg, (weapon_x, weapon_y), "lt")
 
         easy_paste(img, left_bg, (20, 810), "lt")
+
+    # 右上信息
+
+    img_draw.text((800, 100), "能力图❔", (255, 255, 255, 255), va_font_42)
+    six_info = vive[1]['body']['radar_chart']["tabs"][0]
+    tab_name = six_info['sub_tab_name']
+    data_array = six_info['data_array']
+    proportion_array = six_info['proportion_array']
+    """矢量长度，0-100范围长度"""
+    desc_array = six_info['desc_array']
+
+    # width, height = 800, 1000
+    # background_color = (0, 0, 0, 0)  # 透明背景
+    # border_color = "white"
+    # font_color = "white"
+
+    # six_img = Image.new('RGBA', (width, height), background_color)
+    # draw = ImageDraw.Draw(six_img)
+
+    # center_x, center_y = width // 2, height // 2
+    # hexagon_points = []
+
+    # # 计算六边形的顶点
+    # for i in range(6):
+    #     angle = math.pi / 3 * i
+    #     length = proportion_array[i] / 100 * 300  # 将比例转换为长度
+    #     x = center_x + length * math.cos(angle)
+    #     y = center_y + length * math.sin(angle)
+    #     hexagon_points.append((x, y))
+
+    # # 绘制六边形
+    # draw.polygon(hexagon_points, fill=(255, 255, 255, 0), outline=border_color)  # 透明填充
+
+    # # 绘制数据值和描述
+    # for i in range(len(data_array)):
+    #     x, y = hexagon_points[i]
+    #     draw.line((center_x, center_y, x, y), fill=border_color, width=2)  # 连接中心点到顶点
+
+    #     # 根据位置调整文本位置，避免重叠并拉远位置
+    #     text_offset_x = 40 * math.cos(math.pi / 3 * i)
+    #     text_offset_y = 40 * math.sin(math.pi / 3 * i)
+
+    #     draw.text((x + text_offset_x, y + text_offset_y), f"{data_array[i]}",  font_color,va_font_20, "mm")
+    #     draw.text((x + text_offset_x, y + text_offset_y + 25), f"{desc_array[i]}",  font_color,va_font_20, "mm")
+
+    # # 绘制标题
+    # draw.text((center_x, height - 200), tab_name, font=va_font_20, fill=font_color)
+    # easy_paste(img, six_img,(800, 0))
+
+    p_six_info = vive[1]['body']['radar_chart']["player_dict"]
+    p_data_array = p_six_info['data_array']
+    p_proportion_array = p_six_info['proportion_array']
+    """矢量长度，0-100范围长度"""
+
+    # 创建基础图像
+    base_image = Image.open(TEXTURE / 'six_bg.png')
+
+    # 绘制第一个六边形
+    draw_hexagonal_panel(
+        six_info['proportion_array'],
+        base_image,
+        fill_color=(255, 255, 255, 100),  # 透明填充
+    )
+
+    # 绘制第二个白色实心六边形
+    draw_hexagonal_panel(
+        p_six_info['proportion_array'],
+        base_image,
+        fill_color=(255, 255, 255, 255),  # 白色实心填充
+    )
+
+    # 文字部分
+    draw_base = ImageDraw.Draw(base_image)
+    draw_base.text(
+        (365, 88),
+        f"{p_six_info['data_array'][0]} | {six_info['data_array'][0]}",
+        "white",
+        va_font_20,
+        "mm",
+    )
+    draw_base.text(
+        (135, 210),
+        f"{p_six_info['data_array'][1]} | {six_info['data_array'][1]}",
+        "white",
+        va_font_20,
+        "mm",
+    )
+    draw_base.text(
+        (135, 392),
+        f"{p_six_info['data_array'][2]} | {six_info['data_array'][2]}",
+        "white",
+        va_font_20,
+        "mm",
+    )
+    draw_base.text(
+        (365, 480),
+        f"{p_six_info['data_array'][3]} | {six_info['data_array'][3]}",
+        "white",
+        va_font_20,
+        "mm",
+    )
+    draw_base.text(
+        (590, 392),
+        f"{p_six_info['data_array'][4]} | {six_info['data_array'][4]}",
+        "white",
+        va_font_20,
+        "mm",
+    )
+    draw_base.text(
+        (590, 210),
+        f"{p_six_info['data_array'][5]} | {six_info['data_array'][5]}",
+        "white",
+        va_font_20,
+        "mm",
+    )
+
+    draw_base.text(
+        (460, 628), six_info['sub_tab_name'], "white", va_font_30, "mm"
+    )
+
+    easy_paste(img, base_image, (800, 0))
 
     # 右下信息
 
@@ -560,3 +678,26 @@ def hex_to_rgba(hex_color, alpha=255):
     g = int(hex_color[2:4], 16)
     b = int(hex_color[4:6], 16)
     return (r, g, b, alpha)
+
+
+def draw_hexagonal_panel(
+    proportion_array, image, fill_color=(255, 255, 255, 0)
+):
+    width, height = 600, 600
+    draw = ImageDraw.Draw(image)
+
+    center_x, center_y = width // 2 + 50, height // 2 + 50
+    hexagon_points = []
+
+    # 计算六边形的顶点（从正上方开始，逆时针）
+    for i in range(6):
+        angle = math.pi / 3 * i - math.pi / 2  # 从正上方开始
+        length = proportion_array[i] / 100 * 300  # 将比例转换为长度
+        x = center_x + length * math.cos(angle)
+        y = center_y + length * math.sin(angle)
+        hexagon_points.append((x, y))
+
+    # 绘制六边形
+    draw.polygon(
+        hexagon_points, fill=fill_color, outline=(0, 0, 0)
+    )  # 白色实心填充

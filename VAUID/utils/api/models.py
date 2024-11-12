@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, TypedDict
+from typing import List, Optional, TypedDict
 
 
 class ResultInfo(TypedDict):
@@ -519,6 +519,21 @@ class ts(TypedDict):
     # 命中次数
 
 
+class RadarChart(TypedDict):
+    tabs: List[Radar]
+    """同段位水平"""
+    player_dict: Radar
+    """个人水平"""
+    content: str
+    description: str
+    empty_content: str
+    """暂无能力数据"""
+    is_hide_battle: int
+    """是否隐藏战斗"""
+    tips_bg_color: str
+    """背景颜色"""
+
+
 class Body(TypedDict):
     '''头部信息'''
 
@@ -539,10 +554,8 @@ class Body(TypedDict):
     '''
     # 以上第一个 ， 以下能力图
 
-    radar_chart: Dict[str, Radar]
-    '''同段位能力图'''
-    player_dict: Radar
-    '''个人能力图'''
+    radar_chart: RadarChart
+    '''能力图'''
     shooting: List[ts]
     '''
     - 精准击败
