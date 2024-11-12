@@ -11,6 +11,7 @@ from gsuid_core.logger import logger
 
 from ..database.models import VAUser
 from .api import (
+    PFAPI,
     GunAPI,
     MapAPI,
     CardAPI,
@@ -23,6 +24,7 @@ from .api import (
 from .models import (
     Vive,
     Battle,
+    PFInfo,
     GunInfo,
     MapInfo,
     CardInfo,
@@ -279,3 +281,20 @@ class WeGameApi:
         if isinstance(data, int):
             return data
         return cast(List[Vive], data['data']['list'])
+
+    async def get_pf(self, scene: str):
+        _, ck = await self.get_token()
+        header = self._HEADER
+        header['cookie'] = ck
+        data = await self._va_request(
+            PFAPI,
+            header=header,
+            json={
+                'scene': scene,
+                'season_id': season_id,
+                'queue_id': "255",
+            },
+        )
+        if isinstance(data, int):
+            return data
+        return cast(List[PFInfo], data['data']['list'])

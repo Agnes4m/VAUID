@@ -1,4 +1,5 @@
 # from pathlib import Path
+import time
 from pathlib import Path
 from typing import List, Union, Optional
 
@@ -16,6 +17,7 @@ from ..utils.va_font import va_font_20, va_font_30, va_font_42
 from ..utils.api.models import (
     Vive,
     Battle,
+    PFInfo,
     GunInfo,
     CardInfo,
     CardOnline,
@@ -28,17 +30,14 @@ TEXTURE = Path(__file__).parent / 'texture2d'
 async def get_va_info_img(uid: str) -> Union[str, bytes]:
     detail = await va_api.get_player_info(uid)
 
-    logger.info(detail)
     if isinstance(detail, int):
         return get_error(detail)
     if isinstance(detail, str):
         return detail
 
-    # logger.info(detail['gameInfoList'])
     sence = detail['gameInfoList'][0]['scene']
 
     card = await va_api.get_player_card(uid)
-    logger.info("card")
     if isinstance(card, int):
         return get_error(card)
     if isinstance(card, str):
@@ -47,13 +46,14 @@ async def get_va_info_img(uid: str) -> Union[str, bytes]:
     scene = card['role_info']['friend_scene']
 
     cardetail = await va_api.get_detail_card(scene)
-    logger.info("cardetail")
     if isinstance(cardetail, int):
         logger.info(cardetail)
+        cardetail = None
     if isinstance(cardetail, str):
         logger.info(cardetail)
+        cardetail = None
 
-    logger.info(f'scene: {scene}')
+    # logger.info(f'scene: {scene}')
     seeson_id = card['role_info']['session_id']
     logger.info(f'seeson_id: {seeson_id}')
     online = await va_api.get_online(uid, sence)
@@ -65,13 +65,15 @@ async def get_va_info_img(uid: str) -> Union[str, bytes]:
 
     gun = await va_api.get_gun(scene)
     if isinstance(gun, int):
-        logger.error(get_error(gun))
-        gun = None
+        return get_error(gun)
 
     # map_ = await va_api.get_map(scene)
     # if isinstance(map_, int):
     #     logger.error(get_error(map_))
     #     map_ = None
+    hero = await va_api.get_pf(scene)
+    if isinstance(hero, int):
+        return get_error(hero)
 
     vive = await va_api.get_vive(scene)
     if isinstance(vive, int):
@@ -80,7 +82,9 @@ async def get_va_info_img(uid: str) -> Union[str, bytes]:
 
     if len(detail) == 0:
         return "报错了，检查控制台"
-    return await draw_va_info_img(detail, card, cardetail, online, gun, vive)
+    return await draw_va_info_img(
+        detail, card, cardetail, online, gun, hero, vive
+    )
 
 
 async def draw_va_info_img(
@@ -88,12 +92,12 @@ async def draw_va_info_img(
     card: CardInfo,
     valcard: Optional[List[Battle]],
     online: Optional[CardOnline],
-    gun: Optional[List[GunInfo]],
+    gun: List[GunInfo],
+    hero: List[PFInfo],
     vive: Optional[List[Vive]],
 ) -> bytes | str:
     if not card:
         return "token已过期"
-    # logger.info(detail)
     # game_info = detail['gameInfoList'][0]
     card_info = card['card']
     try:
@@ -132,10 +136,10 @@ async def draw_va_info_img(
         (240, 80), detail['nickName'], (255, 255, 255, 255), va_font_42
     )
     img_draw.text(
-        (450, 88), card_info['name'], (200, 200, 200, 255), va_font_30
+        (240, 140), card_info['name'], (200, 200, 200, 255), va_font_30
     )
     img_draw.text(
-        (240, 160), f"UID {detail['appNum']}", (200, 200, 200, 255), va_font_30
+        (240, 180), f"UID {detail['appNum']}", (200, 200, 200, 255), va_font_20
     )
 
     # 综合信息
@@ -261,8 +265,92 @@ async def draw_va_info_img(
     )
 
     # 左下信息
-
     left_bg = Image.open(TEXTURE / 'base1.png')
+
+    hero_bg = Image.open(TEXTURE / 'bg_val_mine_header.png')
+    # 750*368
+    hero_draw = ImageDraw.Draw(hero_bg)
+    hero_draw.text(
+        (100, 20),
+        "英雄",
+        (255, 255, 255, 255),
+        va_font_30,
+        "mm",
+    )
+    hero_draw.text(
+        (300, 20),
+        "时长",
+        (255, 255, 255, 255),
+        va_font_30,
+        "mm",
+    )
+    hero_draw.text(
+        (400, 20),
+        "对局数",
+        (255, 255, 255, 255),
+        va_font_30,
+        "mm",
+    )
+    hero_draw.text(
+        (500, 20),
+        "胜率",
+        (255, 255, 255, 255),
+        va_font_30,
+        "mm",
+    )
+    hero_draw.text(
+        (600, 20),
+        "KD",
+        (255, 255, 255, 255),
+        va_font_30,
+        "mm",
+    )
+
+    for index, one_hero in enumerate(hero, start=1):
+        if index == 4:
+            break
+        hero_one = Image.new('RGBA', (700, 70), (0, 0, 0, 0))
+        hero_img = await save_img(one_hero['image_url'], "hero2")
+
+        head_bg = Image.new('RGBA', (50, 50), "orange")
+        img_draw = ImageDraw.Draw(head_bg)
+        img_draw.rounded_rectangle((0, 0, 50, 50), radius=5, fill="orange")
+        easy_paste(head_bg, hero_img.resize((50, 50)), (0, 0), "lt")
+        easy_paste(hero_one, head_bg, (50, 35), "cc")
+
+        one_draw = ImageDraw.Draw(hero_one)
+        one_draw.text(
+            (110, 35),
+            one_hero['agent_name'],
+            (255, 255, 255, 255),
+            va_font_30,
+            "mm",
+        )
+        one_draw.text(
+            (380, 35),
+            one_hero['part'],
+            "white",
+            va_font_30,
+            "mm",
+        )
+        one_draw.text(
+            (460, 35),
+            one_hero['win_rate'],
+            "white",
+            va_font_30,
+            "mm",
+        )
+        one_draw.text(
+            (580, 35),
+            one_hero['kd'],
+            "white",
+            va_font_30,
+            "mm",
+        )
+        easy_paste(hero_bg, hero_one, (20, index * 80 - 20))
+
+    easy_paste(left_bg, hero_bg, (20, 40), "lt")
+
     # 武器信息
 
     if gun is not None:
@@ -273,24 +361,24 @@ async def draw_va_info_img(
             weapon_draw = ImageDraw.Draw(weapon_bg)
             one_weapon = await save_img(one_gun['image_url'], "weapon")
             easy_paste(
-                weapon_bg, one_weapon.resize((180, 99)), (50, -10), "lt"
+                weapon_bg, one_weapon.resize((190, 99)), (50, -10), "lt"
             )
             weapon_draw.text(
-                (30, 110),
+                (35, 110),
                 one_gun['kill'],
                 (255, 255, 255, 255),
                 va_font_20,
                 "mm",
             )
             weapon_draw.text(
-                (100, 110),
+                (95, 110),
                 one_gun['kill_head'],
                 (255, 255, 255, 255),
                 va_font_20,
                 "mm",
             )
             weapon_draw.text(
-                (170, 110),
+                (172, 110),
                 one_gun['kill_round'],
                 (255, 255, 255, 255),
                 va_font_20,
@@ -361,7 +449,7 @@ async def draw_va_info_img(
         )
     # 战绩
     if valcard is not None and not isinstance(valcard, int):
-        battle_y = 150
+        battle_y = 110
         for index, one_valcard in enumerate(valcard, start=1):
             if index == 7:
                 break
@@ -412,29 +500,10 @@ async def draw_va_info_img(
                 )
                 easy_paste(ranks_bg, ranks_img.resize((50, 50)), (0, 0), "lt")
 
-                easy_paste(battle_bg, ranks_bg, (220, 20), "lt")
+                easy_paste(battle_bg, ranks_bg, (215, 22), "lt")
             else:
-                hero_name = 230
-            # battle_rank_bg = Image.new('RGBA', (50, 50), (0, 0, 0, 0))
-            # battle_rank_draw = ImageDraw.Draw(battle_rank_bg)
-            # battle_rank_draw.rounded_rectangle(
-            #     (0, 0, 50, 50),
-            #     radius=5,
-            #     fill=hex_to_rgba(score_color, alpha=255),
-            # )
+                hero_name = 220
 
-            # battle_rank_img = (
-            #     await save_img(one_valcard['score_level'][f'head_icon_{result}'], "rank")
-            # ).resize((50, 50))
-
-            # for x in range(battle_rank_img.width):
-            #     for y in range(battle_rank_img.height):
-            #         r, g, b, a = battle_rank_img.getpixel((x, y))
-            #         if a > 0:
-            #             battle_rank_img.putpixel((x, y), (0, 0, 0, 255))
-
-            # easy_paste(battle_rank_bg, battle_rank_img, (0, 0), "lt")
-            # easy_paste(battle_bg, battle_rank_bg, (250, 20), "lt")
             battle_draw.text(
                 (hero_name, 20), one_valcard['hero_name'], "white", va_font_42
             )
@@ -443,7 +512,7 @@ async def draw_va_info_img(
             )
 
             battle_draw.text(
-                (500, 25), one_valcard['kda'], "white", va_font_30
+                (485, 25), one_valcard['kda'], "white", va_font_30
             )
 
             if one_valcard['score']:
@@ -458,15 +527,15 @@ async def draw_va_info_img(
                 score_draw.text(
                     (40, 20), one_valcard['score'], "white", va_font_20, "mm"
                 )
-                easy_paste(battle_bg, score_bg, (620, 25), "lt")
-                logger.info(one_valcard['score'])
+                easy_paste(battle_bg, score_bg, (610, 25), "lt")
+                # logger.info(one_valcard['score'])
 
             if one_valcard['is_friend'] == 1:
                 friend_img = Image.open(TEXTURE / 'friend.png')
-                easy_paste(battle_bg, friend_img, (500, 80), "lt")
+                easy_paste(battle_bg, friend_img, (485, 80), "lt")
 
             battle_draw.text(
-                (550, 80), one_valcard['time'], "white", va_font_20
+                (520, 80), one_valcard['time'], "white", va_font_20
             )
 
             # 成就
@@ -476,10 +545,10 @@ async def draw_va_info_img(
                     one_valcard['achievement'], start=1
                 ):
                     ach_bg = await save_img(one['icon'], "icon")
-                    easy_paste(battle_bg, ach_bg, (x, 10), "lt")
-                    x -= (ach_bg.size[0] + 10) * inde
+                    easy_paste(battle_bg, ach_bg, (x, 22), "lt")
+                    x -= (ach_bg.size[0] + 5) * inde
             easy_paste(right_bg, battle_bg, (0, battle_y + index * 150), "lt")
-    easy_paste(img, right_bg, (780, 810), "lt")
+    easy_paste(img, right_bg, (780, 800), "lt")
 
     return await convert_img(img)
 

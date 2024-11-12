@@ -556,3 +556,31 @@ class Vive(TypedDict):
 
     header: Header  # 头部信息
     body: Body  # 主体信息
+
+
+class PFInfo(TypedDict):
+    """使用角色信息"""
+
+    id: str
+    '''角色id'''
+    image_url: str
+    '''角色图标'''
+    icon: str
+    '''角色小图标'''
+    time: str
+    '''游戏时长时间戳'''
+    part: str
+    '''对局次数'''
+    kd: str
+    '''kd'''
+    win_rate: str
+    '''胜率'''
+    agent_id: str
+    '''角色id'''
+
+    bg_font: str
+    '''背景字体'''
+    bg_url: str
+    '''背景图标'''
+    agent_name: str
+    '''角色名称'''
