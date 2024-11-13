@@ -35,7 +35,6 @@
 ### 管理员功能
 
 - va添加ck
-- va添加uid
 
 ## 丨使用方式
 
@@ -43,9 +42,10 @@
 2. 使用**小号**打开**掌上无畏契约**
 3. 抓取 ck，参数包括`userId`和`tid`
 4. 抓取`uuid`
-5. 私聊bot，添加ck和uid
+5. 私聊bot，`添加ck JA-9ce114-514  clientType=9;....`, 添加uid和ck
 6. 发送`va搜索`查询玩家信息,查询内容参考如图片的两个都可以
 ![img](./img/test1.jpg)
+
 7. 发送`va绑定uid`绑定uid
 8. 发送`va查询uid`查询uid
 

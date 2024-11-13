@@ -4,7 +4,7 @@ from gsuid_core.models import Event
 from gsuid_core.message_models import Button
 from gsuid_core.utils.message import send_diff_msg
 
-from .add_ck import add_uid, add_cookie
+from .add_ck import add_cookie
 from ..utils.error_reply import get_error
 from ..utils.database.models import VABind
 from .search_player import search_player_with_name
@@ -17,14 +17,9 @@ va_add_sk = SV('VA添加UID', area='DIRECT')
 
 @va_add_ck.on_prefix(('添加CK', '添加ck'))
 async def send_va_add_ck_msg(bot: Bot, ev: Event):
-    ck = ev.text.strip()
-    await bot.send(await add_cookie(ev, ck))
+    uid, ck = ev.text.strip().split()
 
-
-@va_add_uids.on_prefix(('添加uid', '添加UID'))
-async def send_va_add_uid_msg(bot: Bot, ev: Event):
-    tk = ev.text.strip()
-    await bot.send(await add_uid(ev, tk))
+    await bot.send(await add_cookie(ev, ck, uid))
 
 
 # @va_add_sk.on_prefix(('添加scene', '添加SCENE'))
