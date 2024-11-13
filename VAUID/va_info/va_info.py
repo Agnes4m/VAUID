@@ -149,7 +149,6 @@ async def draw_va_info_img(
     easy_paste(rank_bg, bg_hero, (0, 0), "lt")
     # 左侧
     rank_url = card_info['left_data']['image_url']
-    # rank_img = await save_img(rank_url,"rank",rename=rank_url.split("/")[-1].replace(".webp",".png"))
     rank_img = await save_img(rank_url, "rank")
     # logger.info(card_info)
     rank_draw.text(
@@ -388,10 +387,10 @@ async def draw_va_info_img(
                 va_font_20,
             )
             weapon_x = 20
-            weapon_y = 350
+            weapon_y = 370
             while index > 2:
                 index -= 2
-                weapon_y += 180
+                weapon_y += 190
             weapon_x += (index - 1) * 350
             easy_paste(left_bg, weapon_bg, (weapon_x, weapon_y), "lt")
 
@@ -401,54 +400,8 @@ async def draw_va_info_img(
 
     img_draw.text((800, 100), "能力图❔", (255, 255, 255, 255), va_font_42)
     six_info = vive[1]['body']['radar_chart']["tabs"][0]
-    tab_name = six_info['sub_tab_name']
-    data_array = six_info['data_array']
-    proportion_array = six_info['proportion_array']
-    """矢量长度，0-100范围长度"""
-    desc_array = six_info['desc_array']
-
-    # width, height = 800, 1000
-    # background_color = (0, 0, 0, 0)  # 透明背景
-    # border_color = "white"
-    # font_color = "white"
-
-    # six_img = Image.new('RGBA', (width, height), background_color)
-    # draw = ImageDraw.Draw(six_img)
-
-    # center_x, center_y = width // 2, height // 2
-    # hexagon_points = []
-
-    # # 计算六边形的顶点
-    # for i in range(6):
-    #     angle = math.pi / 3 * i
-    #     length = proportion_array[i] / 100 * 300  # 将比例转换为长度
-    #     x = center_x + length * math.cos(angle)
-    #     y = center_y + length * math.sin(angle)
-    #     hexagon_points.append((x, y))
-
-    # # 绘制六边形
-    # draw.polygon(hexagon_points, fill=(255, 255, 255, 0), outline=border_color)  # 透明填充
-
-    # # 绘制数据值和描述
-    # for i in range(len(data_array)):
-    #     x, y = hexagon_points[i]
-    #     draw.line((center_x, center_y, x, y), fill=border_color, width=2)  # 连接中心点到顶点
-
-    #     # 根据位置调整文本位置，避免重叠并拉远位置
-    #     text_offset_x = 40 * math.cos(math.pi / 3 * i)
-    #     text_offset_y = 40 * math.sin(math.pi / 3 * i)
-
-    #     draw.text((x + text_offset_x, y + text_offset_y), f"{data_array[i]}",  font_color,va_font_20, "mm")
-    #     draw.text((x + text_offset_x, y + text_offset_y + 25), f"{desc_array[i]}",  font_color,va_font_20, "mm")
-
-    # # 绘制标题
-    # draw.text((center_x, height - 200), tab_name, font=va_font_20, fill=font_color)
-    # easy_paste(img, six_img,(800, 0))
 
     p_six_info = vive[1]['body']['radar_chart']["player_dict"]
-    p_data_array = p_six_info['data_array']
-    p_proportion_array = p_six_info['proportion_array']
-    """矢量长度，0-100范围长度"""
 
     # 创建基础图像
     base_image = Image.open(TEXTURE / 'six_bg.png')
@@ -513,10 +466,10 @@ async def draw_va_info_img(
     )
 
     draw_base.text(
-        (460, 628), six_info['sub_tab_name'], "white", va_font_30, "mm"
+        (465, 628), six_info['sub_tab_name'], "white", va_font_30, "mm"
     )
 
-    easy_paste(img, base_image, (800, 0))
+    easy_paste(img, base_image, (800, 100))
 
     # 右下信息
 
@@ -668,6 +621,9 @@ async def draw_va_info_img(
             easy_paste(right_bg, battle_bg, (0, battle_y + index * 150), "lt")
     easy_paste(img, right_bg, (780, 800), "lt")
 
+    footer = Image.open(TEXTURE / 'footer.png')
+    easy_paste(img, footer, (750, 1980), "cc")
+
     return await convert_img(img)
 
 
@@ -683,16 +639,16 @@ def hex_to_rgba(hex_color, alpha=255):
 def draw_hexagonal_panel(
     proportion_array, image, fill_color=(255, 255, 255, 0)
 ):
-    width, height = 600, 600
+    width, height = image.size
     draw = ImageDraw.Draw(image)
-
-    center_x, center_y = width // 2 + 50, height // 2 + 50
+    logger.info(proportion_array)
+    center_x, center_y = width // 2 + 20, height // 2 - 50
     hexagon_points = []
 
     # 计算六边形的顶点（从正上方开始，逆时针）
     for i in range(6):
-        angle = math.pi / 3 * i - math.pi / 2  # 从正上方开始
-        length = proportion_array[i] / 100 * 300  # 将比例转换为长度
+        angle = math.pi / 3 * i + math.pi / 2
+        length = proportion_array[i] / 100 * 200  # 将比例转换为长度
         x = center_x + length * math.cos(angle)
         y = center_y + length * math.sin(angle)
         hexagon_points.append((x, y))
