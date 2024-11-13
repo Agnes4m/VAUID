@@ -17,9 +17,13 @@ va_add_sk = SV('VA添加UID', area='DIRECT')
 
 @va_add_ck.on_prefix(('添加CK', '添加ck'))
 async def send_va_add_ck_msg(bot: Bot, ev: Event):
-    uid, ck = ev.text.strip().split()
-
-    await bot.send(await add_cookie(ev, ck, uid))
+    ck = ev.text.strip()
+    uid = ev.text.strip().split("userId=")[-1].strip().split(";")[0].strip()
+    if not uid.startswith('JA-'):
+        await bot.send('uid格式错误')
+    if not ("tid" in ck or "access_token" in ck or "openid" in ck):
+        return await bot.send('ck格式错误')
+    await bot.send(await add_cookie(ev, uid, ck))
 
 
 # @va_add_sk.on_prefix(('添加scene', '添加SCENE'))

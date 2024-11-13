@@ -41,13 +41,12 @@
 1. 安装插件
 2. 使用**小号**打开**掌上无畏契约**
 3. 抓取 ck，参数包括`userId`和`tid`
-4. 抓取`uuid`
-5. 私聊bot，`添加ck JA-9ce114-514  clientType=9;....`, 添加uid和ck
-6. 发送`va搜索`查询玩家信息,查询内容参考如图片的两个都可以
+4. 私聊bot，`添加ck  clientType=9;....`, 添加ck
+5. 发送`va搜索`查询玩家信息,查询内容参考如图片的两个都可以
 ![img](./img/test1.jpg)
 
-7. 发送`va绑定uid`绑定uid
-8. 发送`va查询uid`查询uid
+6. 发送`va绑定uid`绑定uid
+7. 发送`va查询uid`查询uid
 
 ## to do
 
