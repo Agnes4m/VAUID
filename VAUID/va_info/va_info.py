@@ -34,6 +34,7 @@ async def get_va_info_img(uid: str) -> Union[str, bytes]:
     if isinstance(detail, str):
         return detail
 
+    logger.info(detail)
     sence = detail['gameInfoList'][0]['scene']
 
     card = await va_api.get_player_card(uid)
