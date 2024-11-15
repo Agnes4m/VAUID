@@ -118,26 +118,26 @@ async def draw_va_info_img(
         size=140,
         is_ring=True,
     )  # 128*128
-    easy_paste(img, head_img, (120, 140), direction="cc")
+    easy_paste(img, head_img, (120, 120), direction="cc")
 
     if online is not None and online.get('online_text'):
         if "在线" in online['online_text']:
             online_img = Image.open(TEXTURE / "online" / 'online.png')
         else:
             online_img = Image.open(TEXTURE / "online" / 'offline.png')
-        easy_paste(img, online_img, (180, 210), direction="cc")
+        easy_paste(img, online_img, (180, 190), direction="cc")
 
     line2 = Image.open(TEXTURE / 'line2.png')
-    easy_paste(img, line2, (220, 88))
+    easy_paste(img, line2, (220, 68))
 
     img_draw.text(
-        (240, 80), detail['nickName'], (255, 255, 255, 255), va_font_42
+        (240, 60), detail['nickName'], (255, 255, 255, 255), va_font_42
     )
     img_draw.text(
-        (240, 140), card_info['name'], (200, 200, 200, 255), va_font_30
+        (240, 120), card_info['name'], (200, 200, 200, 255), va_font_30
     )
     img_draw.text(
-        (240, 180), f"UID {detail['appNum']}", (200, 200, 200, 255), va_font_20
+        (240, 160), f"UID {detail['appNum']}", (200, 200, 200, 255), va_font_20
     )
 
     # 综合信息
@@ -257,7 +257,7 @@ async def draw_va_info_img(
 
     img.paste(
         rank_bg,
-        (0, 200),
+        (0, 180),
         rank_bg,
     )
 
@@ -395,7 +395,7 @@ async def draw_va_info_img(
             weapon_x += (index - 1) * 350
             easy_paste(left_bg, weapon_bg, (weapon_x, weapon_y), "lt")
 
-        easy_paste(img, left_bg, (20, 810), "lt")
+        easy_paste(img, left_bg, (20, 790), "lt")
 
     # 右上信息
 
@@ -470,7 +470,7 @@ async def draw_va_info_img(
         (465, 628), six_info['sub_tab_name'], "white", va_font_30, "mm"
     )
 
-    easy_paste(img, base_image, (800, 100))
+    easy_paste(img, base_image, (750, 50))
 
     # 右下信息
 
@@ -521,7 +521,7 @@ async def draw_va_info_img(
         )
     # 战绩
     if valcard is not None and not isinstance(valcard, int):
-        battle_y = 110
+        battle_y = 90
         for index, one_valcard in enumerate(valcard, start=1):
             if index == 7:
                 break
@@ -620,7 +620,33 @@ async def draw_va_info_img(
                     easy_paste(battle_bg, ach_bg, (x, 22), "lt")
                     x -= (ach_bg.size[0] + 5) * inde
             easy_paste(right_bg, battle_bg, (0, battle_y + index * 150), "lt")
-    easy_paste(img, right_bg, (780, 800), "lt")
+    else:
+        bot_uid, _ = await va_api.get_token()
+        bot_detail = await va_api.get_player_info(bot_uid)
+        if not isinstance(bot_detail, int) and not isinstance(bot_detail, str):
+            right_draw.text(
+                (350, 650),
+                "未添加bot好友，无法查询战绩信息",
+                "grey",
+                va_font_30,
+                "mm",
+            )
+            right_draw.text(
+                (350, 690),
+                "需要查询战绩请在掌上无畏契约添加好友",
+                "grey",
+                va_font_30,
+                "mm",
+            )
+            right_draw.text(
+                (350, 730),
+                f"掌瓦【{bot_detail['nickName']}】| UID【{bot_detail['appNum']}】",
+                "grey",
+                va_font_30,
+                "mm",
+            )
+
+    easy_paste(img, right_bg, (750, 780), "lt")
 
     footer = Image.open(TEXTURE / 'footer.png')
     easy_paste(img, footer, (750, 1980), "cc")
@@ -657,4 +683,4 @@ def draw_hexagonal_panel(
     # 绘制六边形
     draw.polygon(
         hexagon_points, fill=fill_color, outline=(0, 0, 0)
-    )  # 白色实心填充
+    )

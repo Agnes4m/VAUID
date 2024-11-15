@@ -1,1 +1,1 @@
-VAUID_version = '0.1.0'
+VAUID_version = '0.1.1'
