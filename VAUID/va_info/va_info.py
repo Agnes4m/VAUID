@@ -681,6 +681,4 @@ def draw_hexagonal_panel(
         hexagon_points.append((x, y))
 
     # 绘制六边形
-    draw.polygon(
-        hexagon_points, fill=fill_color, outline=(0, 0, 0)
-    )
+    draw.polygon(hexagon_points, fill=fill_color, outline=(0, 0, 0))
