@@ -21,9 +21,11 @@ asyncio_mode = "auto"
 requires = ["poetry-core>=1.2.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.pdm]
+distribution = false
 [tool.poetry]
 name = "VAUID"
-version = "0.0.1"
+version = "0.1.0"
 description = "基于gsuid-core, 支持NoneBot2 & HoshinoBot & ZeroBot & YunzaiBot的全功能某FPS游戏Bot插件"
 authors = ["Agnes Digital <Z735803792@163.com>"]
 license = "GPL-3.0-or-later"
@@ -42,15 +44,22 @@ python = "^3.8.1"
 [[tool.poetry.source]]
 name = "USTC"
 url = "https://pypi.mirrors.ustc.edu.cn/simple"
-priority = "default"
+priority = "primary"
 
-[tool.poetry.group.dev.dependencies]
-flake8 = "^6.0.0"
-black = "^23.1.0"
-isort = "^5.12.0"
-pre-commit = "^2.21.0"
-pycln = "^2.1.2"
+[tool.pyright]
+disableBytesTypePromotions = false
 
-[tool.poetry.group.test.dependencies]
-pytest = "^7.2.0"
-pytest-asyncio = "^0.20.3"
+[tool.basedpyright]
+deprecateTypingAliases = false
+
+[project]
+name = "VAUID"
+version = "0.1.0"
+description = "基于gsuid-core, 支持NoneBot2 & HoshinoBot & ZeroBot & YunzaiBot的全功能某FPS游戏Bot插件"
+authors = [
+  { name = "Agnes Digital", email = "Z735803792@163.com" }
+]
+dependencies = []
+requires-python = "==3.10.*"
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
