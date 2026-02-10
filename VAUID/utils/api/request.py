@@ -46,17 +46,11 @@ class WeGameApi:
         "Content-Type": "application/json; charset=utf-8",
     }
 
-    async def get_token(self) -> List[str]:
-        user_list = await ValUser.get_all_user()
-        if user_list:
-            user: ValUser = random.choice(user_list)
-            if user.uid is None:
-                raise Exception("No valid uid")
-            token = await ValUser.get_user_cookie_by_uid(user.uid)
-            if token is None:
-                raise Exception("No valid cookie")
-            return [user.uid, token]
-        return ["", ""]
+    async def get_token(self, uid) -> List[str]:
+        token = await ValUser.get_user_cookie_by_uid(uid)
+        if token is None:
+            raise Exception("No valid cookie")
+        return [uid, token] if token else ["", ""]
 
     async def get_sence(self) -> List[str]:
         user_list = await ValUser.get_all_user()
@@ -94,7 +88,7 @@ class WeGameApi:
 
     async def get_player_info(self, uid: str):
         """使用uid来获取玩家信息,可以获取secen"""
-        opuid, ck = await self.get_token()
+        opuid, ck = await self.get_token(uid)
         header = self._HEADER
         header["cookie"] = ck
         data = await self._va_request(
@@ -216,7 +210,7 @@ class WeGameApi:
             return raw_data
 
     async def get_online(self, uid: str, scene: str):
-        _, ck = await self.get_token()
+        _, ck = await self.get_token(uid)
         header = self._HEADER
         header["cookie"] = ck
         data = await self._va_request(
@@ -232,8 +226,8 @@ class WeGameApi:
             return data
         return cast(CardOnline, data["data"])
 
-    async def get_gun(self, scene: str):
-        _, ck = await self.get_token()
+    async def get_gun(self, uid: str, scene: str):
+        _, ck = await self.get_token(uid)
         header = self._HEADER
         header["cookie"] = ck
         data = await self._va_request(
@@ -249,8 +243,8 @@ class WeGameApi:
             return data
         return cast(List[GunInfo], data["data"]["list"])
 
-    async def get_map(self, scene: str):
-        _, ck = await self.get_token()
+    async def get_map(self, uid: str, scene: str):
+        _, ck = await self.get_token(uid)
         header = self._HEADER
         header["cookie"] = ck
         data = await self._va_request(
@@ -266,8 +260,8 @@ class WeGameApi:
             return data
         return cast(List[MapInfo], data["data"]["list"])
 
-    async def get_vive(self, scene: str):
-        _, ck = await self.get_token()
+    async def get_vive(self, uid: str, scene: str):
+        _, ck = await self.get_token(uid)
         header = self._HEADER
         header["cookie"] = ck
         data = await self._va_request(
@@ -281,8 +275,8 @@ class WeGameApi:
             return data
         return cast(List[Vive], data["data"]["list"])
 
-    async def get_pf(self, scene: str):
-        _, ck = await self.get_token()
+    async def get_pf(self, uid: str, scene: str):
+        _, ck = await self.get_token(uid)
         header = self._HEADER
         header["cookie"] = ck
         data = await self._va_request(

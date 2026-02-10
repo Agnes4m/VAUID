@@ -60,7 +60,7 @@ async def get_va_info_img(uid: str) -> Union[str, bytes]:
         logger.error(get_error(online))
         online = None
 
-    gun = await va_api.get_gun(scene)
+    gun = await va_api.get_gun(uid, scene)
     if isinstance(gun, int):
         return get_error(gun)
 
@@ -68,11 +68,11 @@ async def get_va_info_img(uid: str) -> Union[str, bytes]:
     # if isinstance(map_, int):
     #     logger.error(get_error(map_))
     #     map_ = None
-    hero = await va_api.get_pf(scene)
+    hero = await va_api.get_pf(uid, scene)
     if isinstance(hero, int):
         return get_error(hero)
 
-    vive = await va_api.get_vive(scene)
+    vive = await va_api.get_vive(uid, scene)
     if isinstance(vive, int):
         return get_error(vive)
 
@@ -624,31 +624,31 @@ async def draw_va_info_img(
                     easy_paste(battle_bg, ach_bg, (x, 22), "lt")
                     x -= (ach_bg.size[0] + 5) * inde
             easy_paste(right_bg, battle_bg, (0, battle_y + index * 150), "lt")
-    else:
-        bot_uid, _ = await va_api.get_token()
-        bot_detail = await va_api.get_player_info(bot_uid)
-        if not isinstance(bot_detail, int) and not isinstance(bot_detail, str):
-            right_draw.text(
-                (350, 650),
-                "未添加bot好友，无法查询战绩信息",
-                "grey",
-                va_font_30,
-                "mm",
-            )
-            right_draw.text(
-                (350, 690),
-                "需要查询战绩请在掌上无畏契约添加好友",
-                "grey",
-                va_font_30,
-                "mm",
-            )
-            right_draw.text(
-                (350, 730),
-                f"掌瓦【{bot_detail['nickName']}】| UID【{bot_detail['appNum']}】",
-                "grey",
-                va_font_30,
-                "mm",
-            )
+    # else:
+    #     bot_uid, _ = await va_api.get_token(uid)
+    #     bot_detail = await va_api.get_player_info(bot_uid)
+    #     if not isinstance(bot_detail, int) and not isinstance(bot_detail, str):
+    #         right_draw.text(
+    #             (350, 650),
+    #             "未添加bot好友，无法查询战绩信息",
+    #             "grey",
+    #             va_font_30,
+    #             "mm",
+    #         )
+    #         right_draw.text(
+    #             (350, 690),
+    #             "需要查询战绩请在掌上无畏契约添加好友",
+    #             "grey",
+    #             va_font_30,
+    #             "mm",
+    #         )
+    #         right_draw.text(
+    #             (350, 730),
+    #             f"掌瓦【{bot_detail['nickName']}】| UID【{bot_detail['appNum']}】",
+    #             "grey",
+    #             va_font_30,
+    #             "mm",
+    #         )
 
     easy_paste(img, right_bg, (750, 780), "lt")
 

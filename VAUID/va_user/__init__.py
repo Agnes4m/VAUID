@@ -105,7 +105,9 @@ async def on_valo_login(bot: Bot, ev: Event):
         # 截图
         await page.goto(LOGIN_URL)
         qr_element = await page.wait_for_selector("#qrimg")
-        qr_bytes = await qr_element.screenshot()
+        qr_bytes = (
+            await qr_element.screenshot()
+        )  # pyright: ignore[reportOptionalMemberAccess]
 
         await bot.send(
             [
