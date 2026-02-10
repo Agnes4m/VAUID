@@ -1,6 +1,7 @@
 from typing import Tuple, Optional
 
 from PIL import Image
+
 from gsuid_core.logger import logger
 
 # from gsuid_core.logger import logger
@@ -25,12 +26,12 @@ async def save_img(
         for i in range(3):
             try:
                 map_img = await download_pic_to_image(img_url)
-                if map_img.mode != 'RGBA':
-                    map_img = map_img.convert('RGBA')
+                if map_img.mode != "RGBA":
+                    map_img = map_img.convert("RGBA")
                 if map_img:
                     map_img.save(img_path, "PNG")
                     break
-                logger.warning(f"图片下载错误，正在尝试第{i+2}次")
+                logger.warning(f"图片下载错误，正在尝试第{i + 2}次")
                 if i == 2:
                     raise Exception("图片下载失败！")
                 map_img = Image.open(img_path)
@@ -38,10 +39,9 @@ async def save_img(
                 continue
 
     else:
-
         map_img = Image.open(img_path)
-        if map_img.mode != 'RGBA':
-            map_img = map_img.convert('RGBA')
+        if map_img.mode != "RGBA":
+            map_img = map_img.convert("RGBA")
     if size:
         map_img.resize(size)
     return map_img

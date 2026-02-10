@@ -1,6 +1,33 @@
 from typing import List, Optional, TypedDict
 
 
+class LoginData(TypedDict):
+    openid: List[str]
+    """用户的id"""
+    appid: List[str]
+    """用户的appid"""
+    access_token: List[str]
+    """用户的access_token"""
+    pay_token: List[str]
+    key: List[str]
+    browser: List[str]
+    """0"""
+    browser_error: List[str]
+    """0"""
+    status_os: List[str]
+    sdkv: List[str]
+    status_machine: List[str]
+    """用户的status_machine"""
+    update_auth: List[str]
+    """1"""
+    has_auth: List[str]
+    """1"""
+    auth_time: List[str]
+    page_type: List[str]
+    """1"""
+    redirect_uri_key: List[str]
+
+
 class ResultInfo(TypedDict):
     error_code: int
     error_message: str
@@ -8,45 +35,45 @@ class ResultInfo(TypedDict):
 
 class GameInfo(TypedDict):
     uuid: str
-    '''用户的id'''
+    """用户的id"""
     scene: str
-    '''用户的sc'''
+    """用户的sc"""
     gameHeadUrl: str
-    '''用户头像'''
+    """用户头像"""
     areaName: str
-    '''服务器地区'''
+    """服务器地区"""
     roleName: str
-    '''游戏名称# 114514'''
+    """游戏名称# 114514"""
     gameShortName: str
-    '''VA'''
+    """VA"""
     level: int
-    '''游戏等级'''
+    """游戏等级"""
     tier: Optional[str]
-    '''段位'''
+    """段位"""
     gameColor: str
-    '''游戏颜色？'''
+    """游戏颜色？"""
     content: Optional[str]
-    '''游戏段位内容'''
+    """游戏段位内容"""
     gameId: Optional[str]
-    '''不知道'''
+    """不知道"""
 
     league_point: str
-    '''当前段位分数'''
+    """当前段位分数"""
     role_identity: str
-    '''role_id用途未知'''
+    """role_id用途未知"""
 
 
 class SummonerInfo(TypedDict):
     uuid: str
-    '''用户的ID'''
+    """用户的ID"""
     nickName: str
-    '''用户的名称'''
+    """用户的名称"""
     headUrl: str
-    '''用户头像url'''
+    """用户头像url"""
     backgroundImgUrl: str
-    '''背景图url'''
+    """背景图url"""
     appNum: str
-    '''qq号'''
+    """qq号"""
     gameInfoList: List[GameInfo]
 
 
@@ -56,11 +83,11 @@ class FeedBase(TypedDict):
 
 class Tag_point(TypedDict):
     name: str
-    '''段位名'''
+    """段位名"""
     bgColor: str
-    '''背景颜色#'''
+    """背景颜色#"""
     textColor: str
-    '''文字颜色#'''
+    """文字颜色#"""
 
 
 class InfoBody(TypedDict):
@@ -68,20 +95,20 @@ class InfoBody(TypedDict):
     userName: str
     userIcon: str
     userGender: str
-    '''是否未被封号'''
+    """是否未被封号"""
     userDesc: str
-    '''掌盟账号'''
+    """掌盟账号"""
     userAppNum: str
-    '''qq号'''
+    """qq号"""
     showIndex: int
-    '''是否展示信息'''
+    """是否展示信息"""
     focus: bool
-    '''默认不是不知道是啥'''
+    """默认不是不知道是啥"""
     isVip: bool
-    '''默认false'''
+    """默认false"""
     tag: List[Tag_point]
     isOnline: bool
-    '''是否在线'''
+    """是否在线"""
 
 
 class InfoBodyList(TypedDict):
@@ -90,7 +117,7 @@ class InfoBodyList(TypedDict):
 
 class FeedNews(TypedDict):
     header: dict
-    '''判断是否是好友，没用'''
+    """判断是否是好友，没用"""
     body: InfoBodyList
 
 
@@ -101,416 +128,416 @@ class PlayerInfo(TypedDict):
 
 class RoleInfo(TypedDict):
     session_id: str
-    '''session_id'''
+    """session_id"""
     my_scene: str
-    '''我的场景'''
+    """我的场景"""
     friend_scene: str
-    '''和上面那个一样'''
+    """和上面那个一样"""
     my_roleid: str
-    '''角色roleid'''
+    """角色roleid"""
 
 
 class ReportInfo(TypedDict):
     name: str
-    '''报告名称'''
+    """报告名称"""
 
 
 class Tool(TypedDict):
     title: str
-    '''标题'''
+    """标题"""
     icon: str
-    '''图标'''
+    """图标"""
     dark_icon: str
-    '''暗色图标'''
+    """暗色图标"""
     intent: str
-    '''意图'''
+    """意图"""
     reportInfo: ReportInfo
-    '''报告信息'''
+    """报告信息"""
 
 
 class tc(TypedDict):
     title: str
-    '''标题'''
+    """标题"""
     content: str
-    '''内容'''
+    """内容"""
     icon_url: str
-    '''图标'''
+    """图标"""
 
 
 class LeftData(TypedDict):
     list: List[tc]
     image_url: str
-    '''段位图片'''
+    """段位图片"""
     title: str
-    '''段位名称'''
+    """段位名称"""
 
 
 class RightData(TypedDict):
     list: List[tc]
     image_url: str
-    '''武器图片'''
+    """武器图片"""
     title: str
-    '''删除武器内容'''
+    """删除武器内容"""
     high_light: str
-    '''高亮武器'''
+    """高亮武器"""
 
 
 class CardUrl(TypedDict):
     bg_main_url: str
-    '''背景图片'''
+    """背景图片"""
     bg_text_url: str
-    '''背景文字|通常是空的'''
+    """背景文字|通常是空的"""
     bg_bottom_layer_url: str
-    '''背景底图'''
+    """背景底图"""
     bg_good_red_url: str
-    '''背景红物品'''
+    """背景红物品"""
     bg_hero_name_url: str
-    '''背景英雄名称'''
+    """背景英雄名称"""
     intent: str
-    '''意图'''
+    """意图"""
     intent_text: str
-    '''意图文字'''
+    """意图文字"""
     right_arrow_url: str
-    '''右箭头'''
+    """右箭头"""
     head_url: str
-    '''头像'''
+    """头像"""
     name: str
-    '''名称'''
+    """名称"""
     content: str
-    '''内容'''
+    """内容"""
     hero_url: str
-    '''英雄图标'''
+    """英雄图标"""
     hero_name: str
-    '''英雄名称'''
+    """英雄名称"""
     share_or_copy_url: str
-    '''分享或复制按钮url'''
+    """分享或复制按钮url"""
     qr_code_url: str
-    '''二维码'''
+    """二维码"""
     left_data: Optional[LeftData]
     middle_data: Optional[tc]
-    '''KAST'''
+    """KAST"""
     right_data: Optional[RightData]
     round_win_rate: Optional[tc]
-    '''回合胜率'''
+    """回合胜率"""
     card_switch_tips: str
-    '''无'''
+    """无"""
     is_vip: int
-    '''0'''
+    """0"""
     tab: dict
-    '''按钮相关参数'''
+    """按钮相关参数"""
 
 
 class CardInfo(TypedDict):
     has_role: int
-    '''是否有角色？'''
+    """是否有角色？"""
     role_info: RoleInfo
     tools: List[Tool]
     scene: str
-    '''场景'''
+    """场景"""
     card_visible: int
-    '''是否可见'''
+    """是否可见"""
     layer_small: str
-    '''小图标'''
+    """小图标"""
     layer_big: str
-    '''大图标'''
+    """大图标"""
     bg_header_layer_url: str
-    '''背景头图'''
+    """背景头图"""
     card: CardUrl
 
 
 class ListInfo(TypedDict):
     list: List[tc]
     image_url: str
-    '''图片'''
+    """图片"""
     title: str
-    '''标题'''
+    """标题"""
     high_light: str
-    '''高亮'''
+    """高亮"""
 
 
 class CardDetail(TypedDict):
     left_data: ListInfo
-    '''左边数据
+    """左边数据
     赛季KDA  | 生涯时长
     段位图片
     段位名称
-    '''
+    """
     right_data: ListInfo
-    '''右边数据
+    """右边数据
     赛季胜率 | 赛季爆头率
     武器图片
     武器名称
     擅长武器名称
-    '''
+    """
     hero_url: str
     hero_name: str
 
 
 class CardOnline(TypedDict):
-    '''在线数据'''
+    """在线数据"""
 
     online_state: int
-    '''是否在线'''
+    """是否在线"""
     online_text: str
-    '''在线文字'''
+    """在线文字"""
     online_color: str
-    '''在线颜色'''
+    """在线颜色"""
 
 
 class GunInfo(TypedDict):
-    '''武器数据'''
+    """武器数据"""
 
     id: str
-    '''武器id'''
+    """武器id"""
     name: str
-    '''武器名称'''
+    """武器名称"""
     image_url: str
-    '''武器图片'''
+    """武器图片"""
     kill: str
-    '''击杀数'''
+    """击杀数"""
     kill_head: str
-    '''爆头率'''
+    """爆头率"""
     kill_round: str
-    '''回合击杀'''
+    """回合击杀"""
     kill_farthest: str
-    '''最远击杀距离(无单位)'''
+    """最远击杀距离(无单位)"""
 
 
 class MapInfo(TypedDict):
-    '''地图信息'''
+    """地图信息"""
 
     agent_id: str
-    '''地图id'''
+    """地图id"""
     map_id: str
-    '''地图id路径'''
+    """地图id路径"""
     name: str
-    '''地图名称'''
+    """地图名称"""
     map_icon: str
-    '''地图图标'''
+    """地图图标"""
     win_rate: str
-    '''胜率(100.0)'''
+    """胜率(100.0)"""
     best_hero_win_rate: str
-    '''最佳英雄胜率(100.0)'''
+    """最佳英雄胜率(100.0)"""
     best_hero_url: str
-    '''最佳英雄图标'''
+    """最佳英雄图标"""
     kd: str
-    '''kd'''
+    """kd"""
     round_score: str
-    '''回合评分'''
+    """回合评分"""
     map_mask_color: str
-    '''地图遮罩颜色
+    """地图遮罩颜色
     linear-gradient(67.11deg,
             #21414B 10.25%,
             rgba(65,
             81,
             85,
             0) 81.97%)"
-    '''
+    """
 
 
 class ScoreLevel(TypedDict):
-    '''评分数据'''
+    """评分数据"""
 
     id: int
-    '''评分id, 0'''
+    """评分id, 0"""
     level: str
-    '''评分评价, B'''
+    """评分评价, B"""
     title: str
-    '''评分名称'''
+    """评分名称"""
     guide: str
-    '''评分说明'''
+    """评分说明"""
     high_light: str
-    '''高亮评分 | 无'''
+    """高亮评分 | 无"""
     intent: str
     icon: str
-    '''评分小图标'''
+    """评分小图标"""
     head_icon_win: str
-    '''胜利头像评分小图标'''
+    """胜利头像评分小图标"""
     head_icon_fail: str
-    '''失败头像评分小图标'''
+    """失败头像评分小图标"""
     head_icon_draw: str
-    '''平局头像评分小图标'''
+    """平局头像评分小图标"""
     white_icon: str
-    '''白色小图标'''
+    """白色小图标"""
 
 
 class UsedMap(TypedDict):
-    '''地图信息'''
+    """地图信息"""
 
     id: int
-    '''地图id, 0'''
+    """地图id, 0"""
     name: str
-    '''地图名称'''
+    """地图名称"""
     e_name: str
-    '''地图英文名称'''
+    """地图英文名称"""
     icon: str
-    '''地图图标'''
+    """地图图标"""
 
 
 class Competitve(TypedDict):
-    '''排位信息'''
+    """排位信息"""
 
     competitive_tier_change_icon: str
-    '''排位变化图标'''
+    """排位变化图标"""
     competitive_tier_icon: str
-    '''排位图标'''
+    """排位图标"""
     competitive_point_change: str
-    '''排位变化'''
+    """排位变化"""
     competitive_tier_color: str
-    '''排位颜色 #24B7AF'''
+    """排位颜色 #24B7AF"""
     competitive_tier_change: int
 
 
 class Achievement(TypedDict):
-    '''成就信息'''
+    """成就信息"""
 
     id: str
-    '''成就id'''
+    """成就id"""
     icon: str
-    '''成就图标130* 40'''
+    """成就图标130* 40"""
     width: int
-    '''成就图标宽度'''
+    """成就图标宽度"""
     height: int
-    '''成就图标高度'''
+    """成就图标高度"""
     desc: str
-    '''成就描述'''
+    """成就描述"""
     aclos_icon: str
-    '''旧版本成就图标'''
+    """旧版本成就图标"""
     aclos_desc: str
-    '''旧版本成就描述'''
+    """旧版本成就描述"""
 
 
 class Battle(TypedDict):
-    '''战斗数据'''
+    """战斗数据"""
 
     battle_id: str
-    '''战斗id'''
+    """战斗id"""
     match_id: str
-    '''匹配id'''
+    """匹配id"""
     image_url: str
-    '''使用角色url'''
+    """使用角色url"""
     result_title: str
-    '''胜利  |  平局  |  失败'''
+    """胜利  |  平局  |  失败"""
     result_color: str
-    '''颜色 #24B7AF'''
+    """颜色 #24B7AF"""
     hero_name: str
-    '''使用英雄名称'''
+    """使用英雄名称"""
     content: str
-    '''普通模式 | 深寒东港'''
+    """普通模式 | 深寒东港"""
     kda: str
-    '''kda'''
+    """kda"""
     score: str
-    '''回合评分'''
+    """回合评分"""
     score_color: str
-    '''回合评分颜色'''
+    """回合评分颜色"""
     time: str
-    '''时间'''
+    """时间"""
     ts: int
-    '''持续时间戳'''
+    """持续时间戳"""
     intent: str
-    '''游戏内跳转链接'''
+    """游戏内跳转链接"""
     role_id: str
-    '''角色id'''
+    """角色id"""
     kda_score: str
-    '''kda分数'''
+    """kda分数"""
     score_avg: str
-    '''平均分数'''
+    """平均分数"""
     kill_death: str
-    '''空值'''
+    """空值"""
     game_mode: str
-    '''游戏模式(普通、排位)'''
+    """游戏模式(普通、排位)"""
     game_mode_icon: str
-    '''游戏模式图标'''
+    """游戏模式图标"""
     used_map: UsedMap
     round_fail: int
-    '''回合失败次数'''
+    """回合失败次数"""
     round_won: int
-    '''回合胜利次数'''
+    """回合胜利次数"""
     game_enum: str
-    '''游戏模式 | unrated'''
+    """游戏模式 | unrated"""
     rank: int
-    '''段位'''
+    """段位"""
     score_level: ScoreLevel
-    '''评分数据'''
+    """评分数据"""
     is_friend: int
-    '''是否好友'''
+    """是否好友"""
     competitive_tier: Competitve
-    '''排位信息'''
+    """排位信息"""
     achievement: List[Achievement]
-    '''成就信息'''
+    """成就信息"""
 
 
 class ValBattle(TypedDict):
-    '''战斗数据'''
+    """战斗数据"""
 
     next_baton: str
-    '''下一把武器uid'''
+    """下一把武器uid"""
     battle_list: List[Battle]
     msg: str
-    '''两个月内的记录'''
+    """两个月内的记录"""
 
 
 class Header(TypedDict):
-    '''头部信息'''
+    """头部信息"""
 
     layout_type: str
-    '''信息id
+    """信息id
     - 1005
     - 1006 能力图
-    '''
+    """
     title: str
     tips: List[str]
-    '''提示信息'''
+    """提示信息"""
     isShowIcon: bool
-    '''是否显示图标'''
+    """是否显示图标"""
 
 
 class tv(TypedDict):
-    '''变化趋势'''
+    """变化趋势"""
 
     title: str
-    '''标题 | 变化趋势'''
+    """标题 | 变化趋势"""
     values: List[int]
-    '''段位趋势'''
+    """段位趋势"""
     heights: List[int]
-    '''段位高度'''
+    """段位高度"""
     x: List[int]
-    '''段位坐标(0123456789)'''
+    """段位坐标(0123456789)"""
     y: List[int]
-    '''段位坐标(段位)'''
+    """段位坐标(段位)"""
     rate: List[List[int]]
-    '''段位坐标(xy)'''
+    """段位坐标(xy)"""
     max_point: List[int]
-    '''段位最高坐标(xy)'''
+    """段位最高坐标(xy)"""
     max_value_text: str
-    '''段位最高名称'''
+    """段位最高名称"""
     max_value_icon: str
-    '''段位最高图标'''
+    """段位最高图标"""
     max_value_icon_type: str
-    '''段位最高图标类型'''
+    """段位最高图标类型"""
 
 
 class Radar(TypedDict):
-    '''能力图'''
+    """能力图"""
 
     line_color: str
     fill_color: str
     sub_tab_name: str
-    '''位置名称 | 决斗 | 先锋 | 控场 | 哨卫'''
+    """位置名称 | 决斗 | 先锋 | 控场 | 哨卫"""
     desc: str
     data_array: List[str]
-    '''六边形数据值'''
+    """六边形数据值"""
     proportion_array: List[int]
-    '''六边形数据长度'''
+    """六边形数据长度"""
     desc_array: List[str]
-    '''六边形数据名称'''
+    """六边形数据名称"""
 
     tips_bg_color: str
     """个人 #80E47C73"""
 
 
 class ts(TypedDict):
-    '''段位名称'''
+    """段位名称"""
 
     title: str  # 名称
     sub_title: str  # 子名称
@@ -535,33 +562,33 @@ class RadarChart(TypedDict):
 
 
 class Body(TypedDict):
-    '''头部信息'''
+    """头部信息"""
 
     first_list: List[tc]
-    '''
+    """
     - 当前段位 白银
     - 赛季最高 白银
     - 近期表现 A
-    '''
+    """
     line_chart_list: List[tv]
-    '''段位趋势 2个'''
+    """段位趋势 2个"""
     second_list: List[tc]
-    '''
+    """
     - 胜率
     - 平均战斗
     - KAST
     - 总时长
-    '''
+    """
     # 以上第一个 ， 以下能力图
 
     radar_chart: RadarChart
-    '''能力图'''
+    """能力图"""
     shooting: List[ts]
-    '''
+    """
     - 精准击败
     - 身体
     - 腿部
-    '''
+    """
 
 
 class Vive(TypedDict):
@@ -575,25 +602,25 @@ class PFInfo(TypedDict):
     """使用角色信息"""
 
     id: str
-    '''角色id'''
+    """角色id"""
     image_url: str
-    '''角色图标'''
+    """角色图标"""
     icon: str
-    '''角色小图标'''
+    """角色小图标"""
     time: str
-    '''游戏时长时间戳'''
+    """游戏时长时间戳"""
     part: str
-    '''对局次数'''
+    """对局次数"""
     kd: str
-    '''kd'''
+    """kd"""
     win_rate: str
-    '''胜率'''
+    """胜率"""
     agent_id: str
-    '''角色id'''
+    """角色id"""
 
     bg_font: str
-    '''背景字体'''
+    """背景字体"""
     bg_url: str
-    '''背景图标'''
+    """背景图标"""
     agent_name: str
-    '''角色名称'''
+    """角色名称"""

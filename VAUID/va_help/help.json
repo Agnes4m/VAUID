@@ -3,8 +3,16 @@
     "desc": "需要先绑定uid",
     "data": [
       {
+        "name": "扫码登录",
+        "desc": "扫码登录后会自动绑定",
+        "eg": "扫码登录",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
         "name": "绑定uid",
-        "desc": "绑定你的steam UID",
+        "desc": "绑定你的无畏契约uid",
         "eg": "绑定uid 123456",
         "need_ck": false,
         "need_sk": false,
@@ -12,7 +20,7 @@
       },
       {
         "name": "删除uid",
-        "desc": "删除你的steam UID",
+        "desc": "删除你的无畏契约uid",
         "eg": "删除uid 123456",
         "need_ck": false,
         "need_sk": false,
@@ -20,8 +28,8 @@
       },
       {
         "name": "切换uid",
-        "desc": "切换你的steam UID",
-        "eg": "切换uid123456",
+        "desc": "切换你的无畏契约uid",
+        "eg": "切换uid 123456",
         "need_ck": false,
         "need_sk": false,
         "need_admin": false
@@ -63,11 +71,11 @@
     ]
   },
   "管理员功能": {
-    "desc": "游戏攻略相关查询",
+    "desc": "其他",
     "data": [
       {
         "name": "添加ck",
-        "desc": "作为完美数据请求的token",
+        "desc": "作为数据请求的token",
         "eg": "添加ck clientxxx",
         "need_ck": false,
         "need_sk": false,

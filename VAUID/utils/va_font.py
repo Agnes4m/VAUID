@@ -1,10 +1,11 @@
 from pathlib import Path
 
 from PIL import ImageFont
+
 from gsuid_core.utils.fonts.fonts import core_font as va_font
 
-FONT_MAIN_PATH = Path(__file__).parent / 'fonts/loli.ttf'
-FONT_TIELE_PATH = Path(__file__).parent / 'fonts/title.ttf'
+FONT_MAIN_PATH = Path(__file__).parent / "fonts/loli.ttf"
+FONT_TIELE_PATH = Path(__file__).parent / "fonts/title.ttf"
 
 
 def va_font_main(size: int) -> ImageFont.FreeTypeFont:

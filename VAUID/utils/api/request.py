@@ -1,15 +1,14 @@
-import random
 import json as js
+import random
 from copy import deepcopy
 from typing import Any, Dict, List, Union, Literal, Optional, cast
 
-from aiohttp import FormData
-
 # from gsuid_core.utils.download_resource.download_file import download
 from httpx import AsyncClient
+from aiohttp import FormData
+
 from gsuid_core.logger import logger
 
-from ..database.models import VAUser
 from .api import (
     PFAPI,
     GunAPI,
@@ -32,6 +31,7 @@ from .models import (
     CardOnline,
     SummonerInfo,
 )
+from ..database.models import ValUser
 
 season_id = "dcde7346-4085-de4f-c463-2489ed47983b"
 
@@ -39,35 +39,35 @@ season_id = "dcde7346-4085-de4f-c463-2489ed47983b"
 class WeGameApi:
     ssl_verify = False
     _HEADER: Dict[str, str] = {
-        'User-Agent': 'mval/1.4.1.10011 Channel/3'
-        'Mozilla/5.0 (Linux; Android 9; V2171A Build/PQ3A.190605.10171107; wv)'
-        'AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0'
-        'Chrome/91.0.4472.114 Mobile Safari/537.36',
-        'Content-Type': 'application/json; charset=utf-8',
+        "User-Agent": "mval/1.4.1.10011 Channel/3"
+        "Mozilla/5.0 (Linux; Android 9; V2171A Build/PQ3A.190605.10171107; wv)"
+        "AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0"
+        "Chrome/91.0.4472.114 Mobile Safari/537.36",
+        "Content-Type": "application/json; charset=utf-8",
     }
 
     async def get_token(self) -> List[str]:
-        user_list = await VAUser.get_all_user()
+        user_list = await ValUser.get_all_user()
         if user_list:
-            user: VAUser = random.choice(user_list)
+            user: ValUser = random.choice(user_list)
             if user.uid is None:
-                raise Exception('No valid uid')
-            token = await VAUser.get_user_cookie_by_uid(user.uid)
+                raise Exception("No valid uid")
+            token = await ValUser.get_user_cookie_by_uid(user.uid)
             if token is None:
-                raise Exception('No valid cookie')
+                raise Exception("No valid cookie")
             return [user.uid, token]
         return ["", ""]
 
     async def get_sence(self) -> List[str]:
-        user_list = await VAUser.get_all_user()
+        user_list = await ValUser.get_all_user()
         if user_list:
-            user: VAUser = random.choice(user_list)
+            user: ValUser = random.choice(user_list)
             if user.uid is None:
-                raise Exception('No valid uid')
-            token = await VAUser.get_user_cookie_by_uid(user.uid)
-            stoken = await VAUser.get_user_stoken_by_uid(user.uid)
+                raise Exception("No valid uid")
+            token = await ValUser.get_user_cookie_by_uid(user.uid)
+            stoken = await ValUser.get_user_stoken_by_uid(user.uid)
             if stoken is None or token is None:
-                raise Exception('No valid cookie')
+                raise Exception("No valid cookie")
             return [user.uid, token, stoken]
         return ["", "", ""]
 
@@ -80,8 +80,8 @@ class WeGameApi:
         data_1 = await self._va_request(
             SearchAPI,
             params={
-                'keyWord': key_word,
-                'app_scope': 'lol',
+                "keyWord": key_word,
+                "app_scope": "lol",
                 "searchType": "1",
                 "page": "0",
                 "pageSize": "10",
@@ -90,28 +90,28 @@ class WeGameApi:
 
         if isinstance(data_1, int):
             return data_1
-        return cast(List[InfoBody], data_1['data']['userList'])
+        return cast(List[InfoBody], data_1["data"]["userList"])
 
     async def get_player_info(self, uid: str):
         """使用uid来获取玩家信息,可以获取secen"""
         opuid, ck = await self.get_token()
         header = self._HEADER
-        header['cookie'] = ck
+        header["cookie"] = ck
         data = await self._va_request(
             SummonerAPI,
             header=header,
             json={
-                'opUuid': opuid,
-                'isNeedGameInfo': 1,
-                'isNeedMedal': 0,
-                'isNeedCommunityInfo': 1,
-                'clientType': 9,
-                'isNeedDress': 1,
-                'isNeedRemark': 1,
-                'uuidSceneList': [
+                "opUuid": opuid,
+                "isNeedGameInfo": 1,
+                "isNeedMedal": 0,
+                "isNeedCommunityInfo": 1,
+                "clientType": 9,
+                "isNeedDress": 1,
+                "isNeedRemark": 1,
+                "uuidSceneList": [
                     {
-                        'uuid': uid,
-                        'scene': "",
+                        "uuid": uid,
+                        "scene": "",
                     }
                 ],
             },
@@ -119,10 +119,10 @@ class WeGameApi:
         logger.info(data)
         if isinstance(data, int):
             return data
-        if data["msg"] != 'success':
+        if data["msg"] != "success":
             logger.error(f"获取卡片信息失败：{data}")
-            return cast(str, data['data'])
-        return cast(SummonerInfo, data['data'][0])
+            return cast(str, data["data"])
+        return cast(SummonerInfo, data["data"][0])
 
     async def get_player_card(self, uid: str):
         """获取玩家卡片信息
@@ -132,33 +132,33 @@ class WeGameApi:
         data = await self._va_request(
             CardAPI,
             json={
-                'uuid': uid,
-                'jump_key': 'mine',
+                "uuid": uid,
+                "jump_key": "mine",
             },
         )
         # logger.info(data)
         if isinstance(data, int):
             return data
         if data["result"] != 0:
-            return cast(str, data['data'])
-        return cast(CardInfo, data['data'])
+            return cast(str, data["data"])
+        return cast(CardInfo, data["data"])
 
     async def get_detail_card(self, secen: str):
         """用secen获取玩家卡片信息"""
         data = await self._va_request(
             ValCardAPI,
-            json={'scene': secen},
+            json={"scene": secen},
         )
         if isinstance(data, int):
             return data
         if data["result"] != 0:
-            return cast(str, data['data'])
-        return cast(List[Battle], data['data']['battle_list'])
+            return cast(str, data["data"])
+        return cast(List[Battle], data["data"]["battle_list"])
 
     async def _va_request(
         self,
         url: str,
-        method: Literal['GET', 'POST'] = 'GET',
+        method: Literal["GET", "POST"] = "GET",
         header: Dict[str, str] = _HEADER,
         params: Optional[Dict[str, Any]] = None,
         json: Optional[Dict[str, Any]] = None,
@@ -167,19 +167,19 @@ class WeGameApi:
     ) -> Union[Dict, int]:
         header = deepcopy(self._HEADER)
 
-        if need_ck and 'cookie' not in header:
-            if json and 'id' in json:
-                uid = json['id']
+        if need_ck and "cookie" not in header:
+            if json and "id" in json:
+                uid = json["id"]
             else:
-                uid = ' 9999'
-            ck = await VAUser.get_random_cookie(uid)
+                uid = " 9999"
+            ck = await ValUser.get_random_cookie(uid)
             if ck:
-                header['Cookie'] = ck
+                header["Cookie"] = ck
             else:
                 return -511
 
         if json:
-            method = 'POST'
+            method = "POST"
 
         async with AsyncClient(verify=self.ssl_verify) as client:
             resp = await client.request(
@@ -198,103 +198,102 @@ class WeGameApi:
                     raw_data = js.loads(_raw_data)
                 except:  # noqa: E722
                     raw_data = {
-                        'result': {'error_code': -999, 'data': _raw_data}
+                        "result": {"error_code": -999, "data": _raw_data}
                     }
             # print(raw_data)
             try:
                 if (
-                    'result' in raw_data
-                    and 'error_code' in raw_data['result']
-                    and raw_data['result']['error_code'] != 0
+                    "result" in raw_data
+                    and "error_code" in raw_data["result"]
+                    and raw_data["result"]["error_code"] != 0
                 ):
-                    return raw_data['result']['error_code']
+                    return raw_data["result"]["error_code"]
 
             except TypeError:
                 pass
-            if raw_data['result'] != 0:
-                return raw_data['result']
+            if raw_data["result"] != 0:
+                return raw_data["result"]
             return raw_data
 
     async def get_online(self, uid: str, scene: str):
-
         _, ck = await self.get_token()
         header = self._HEADER
-        header['cookie'] = ck
+        header["cookie"] = ck
         data = await self._va_request(
             OnlineAPI,
             header=header,
             json={
-                'uuid': uid,
-                'scene': scene,
+                "uuid": uid,
+                "scene": scene,
             },
         )
         logger.info(data)
         if isinstance(data, int):
             return data
-        return cast(CardOnline, data['data'])
+        return cast(CardOnline, data["data"])
 
     async def get_gun(self, scene: str):
         _, ck = await self.get_token()
         header = self._HEADER
-        header['cookie'] = ck
+        header["cookie"] = ck
         data = await self._va_request(
             GunAPI,
             header=header,
             json={
-                'scene': scene,
-                'season_id': season_id,
-                'queue_id': "255",
+                "scene": scene,
+                "season_id": season_id,
+                "queue_id": "255",
             },
         )
         if isinstance(data, int):
             return data
-        return cast(List[GunInfo], data['data']['list'])
+        return cast(List[GunInfo], data["data"]["list"])
 
     async def get_map(self, scene: str):
         _, ck = await self.get_token()
         header = self._HEADER
-        header['cookie'] = ck
+        header["cookie"] = ck
         data = await self._va_request(
             MapAPI,
             header=header,
             json={
-                'scene': scene,
-                'season_id': season_id,
-                'queue_id': "255",
+                "scene": scene,
+                "season_id": season_id,
+                "queue_id": "255",
             },
         )
         if isinstance(data, int):
             return data
-        return cast(List[MapInfo], data['data']['list'])
+        return cast(List[MapInfo], data["data"]["list"])
 
     async def get_vive(self, scene: str):
         _, ck = await self.get_token()
         header = self._HEADER
-        header['cookie'] = ck
+        header["cookie"] = ck
         data = await self._va_request(
             ViveAPI,
             header=header,
             json={
-                'scene': scene,
+                "scene": scene,
             },
         )
         if isinstance(data, int):
             return data
-        return cast(List[Vive], data['data']['list'])
+        return cast(List[Vive], data["data"]["list"])
 
     async def get_pf(self, scene: str):
         _, ck = await self.get_token()
         header = self._HEADER
-        header['cookie'] = ck
+        header["cookie"] = ck
         data = await self._va_request(
             PFAPI,
             header=header,
             json={
-                'scene': scene,
-                'season_id': season_id,
-                'queue_id': "255",
+                "scene": scene,
+                "season_id": season_id,
+                "queue_id": "255",
             },
         )
         if isinstance(data, int):
             return data
-        return cast(List[PFInfo], data['data']['list'])
+        return cast(List[PFInfo], data["data"]["list"])
