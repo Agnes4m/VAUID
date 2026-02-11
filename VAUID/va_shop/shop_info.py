@@ -1,10 +1,4 @@
-import asyncio
-from email import message
-from typing import List, Union, Optional, cast
-
-from PIL import Image, ImageDraw
-
-from gsuid_core.logger import logger
+from typing import List, Union
 
 from .utils import time_delta
 
@@ -14,7 +8,6 @@ from .utils import time_delta
 from ..utils.va_api import va_api
 from ..utils.api.models import (
     Shop,
-    ShopDay,
     SummonerInfo,
 )
 from ..utils.error_reply import get_error
@@ -54,7 +47,9 @@ async def draw_va_shop_img(
 ):
     msg: str = "--今日商店--"
     day_list = next((i for i in shop_list if i["key"] == "dailystore"), None)
-    king_list = next((i for i in shop_list if i["key"] == "kingdomstore"), None)
+    king_list = next(
+        (i for i in shop_list if i["key"] == "kingdomstore"), None
+    )
     if day_list is not None:
         day_time = await time_delta(day_list["time"])
         msg += f"""[每日商店] {day_time}分

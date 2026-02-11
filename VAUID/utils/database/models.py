@@ -55,7 +55,7 @@ class ValUser(User):
         obj = cls(
             bot_id=bot_id,
             user_id=user_id,
-            cookie="",
+            cookie=cookie,
             uid=uid,
         )
         session.add(obj)

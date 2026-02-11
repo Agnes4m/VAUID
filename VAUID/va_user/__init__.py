@@ -136,11 +136,11 @@ async def on_valo_login(bot: Bot, ev: Event):
         if not final_info:
             return await bot.send("获取游戏凭证失败，请重试。")
         uid = final_info["userId"]
-        await ValBind.insert_uid(
-            bot_id=bot.bot_id,
-            user_id=ev.user_id,
-            uid=uid,
-        )
+        # await ValBind.insert_uid(
+        #     bot_id=bot.bot_id,
+        #     user_id=ev.user_id,
+        #     uid=uid,
+        # )
 
         cookie_str = (
             f"clientType=9; uin=o1123159457; appid={login_temp_data['appid']}; acctype=qc; "
