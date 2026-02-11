@@ -1,4 +1,4 @@
-from typing import List, Optional, TypedDict
+from typing import List, Literal, Optional, TypedDict
 
 
 class LoginData(TypedDict):
@@ -624,3 +624,85 @@ class PFInfo(TypedDict):
     """背景图标"""
     agent_name: str
     """角色名称"""
+
+
+class ShopDay(TypedDict):
+    """商店信息"""
+
+    goods_name: str
+    """商品名称"""
+    goods_pic: str
+    """商品图标"""
+    goods_id: str
+    guid: str
+    intent: str
+    """跳转链接"""
+    tips: str
+    """提示信息"""
+    rmb_price: str
+    """价格"""
+    quality: Literal["green", "blue", "purple", "orange"]
+    """品质
+    - purple=pink
+    - orange=yellow
+    """
+    bg_image: str
+    """UI通用品质背景图标"""
+    showed: int
+    """是否展示"""
+    token: str
+    show_mask_quality: int
+    like_num: str
+    """想要人数"""
+    skin_tag: str
+
+
+class ShopKing(TypedDict):
+    """商店信息"""
+
+    goods_name: str
+    """商品名称
+    最后两个字是类型，空格间隔"""
+    goods_pic: str
+    """商品图标"""
+    goods_id: str
+    guid: str
+    intent: str
+    """跳转链接"""
+    tips: str
+    """提示信息"""
+    rmb_price: str
+    """价格"""
+    quality: Literal["green", "blue", "purple", "orange", ""]
+    """品质
+    - purple=pink背景
+    - orange=yellow背景
+    - 王国商店为空
+    """
+    bg_image: str
+    """UI通用品质背景图标"""
+    showed: int
+    """是否展示"""
+    token: str
+    show_mask_quality: int
+    like_num: str
+    """想要人数"""
+    skin_tag: str
+
+
+class Shop(TypedDict):
+    """商店信息"""
+
+    key: Literal["dailystore", "kingdomstore"]
+    title: str
+    """商店标题
+    - 每日商店(枪，刀)
+    - 王国商店(喷漆，挂饰)
+    """
+    time: float
+    """商店时间"""
+    end_ts: float
+    """商店结束时间戳"""
+    cur_ts: float
+    """商店当前时间戳"""
+    list: List[ShopDay]

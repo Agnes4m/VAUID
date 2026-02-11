@@ -46,6 +46,14 @@
         "need_ck": true,
         "need_sk": false,
         "need_admin": false
+      },
+      {
+        "name": "商店",
+        "desc": "查询每日商店信息",
+        "eg": "商店",
+        "need_ck": true,
+        "need_sk": false,
+        "need_admin": false
       }
     ]
   },

@@ -8,4 +8,4 @@ async def add_cookie(ev: Event, uid: str, ck: str):
         await ValUser.insert_data(ev.user_id, ev.bot_id, cookie=ck, uid=uid)
     else:
         await ValUser.update_data(ev.user_id, ev.bot_id, cookie=ck, uid=uid)
-    return "[VA]添加ck成功！"
+    return "[Val]添加ck成功！"

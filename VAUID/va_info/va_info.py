@@ -1,6 +1,5 @@
-import math
+import asyncio
 from typing import List, Union, Optional
-from pathlib import Path
 
 from PIL import Image, ImageDraw
 
@@ -10,7 +9,7 @@ from gsuid_core.logger import logger
 from gsuid_core.utils.image.convert import convert_img
 from gsuid_core.utils.image.image_tools import easy_paste, draw_pic_with_ring
 
-from .utils import save_img
+from .utils import DrawUtils, save_img, get_cached_texture
 from ..utils.va_api import va_api
 from ..utils.va_font import va_font_20, va_font_30, va_font_42
 from ..utils.api.models import (
@@ -24,10 +23,9 @@ from ..utils.api.models import (
 )
 from ..utils.error_reply import get_error
 
-TEXTURE = Path(__file__).parent / "texture2d"
-
 
 async def get_va_info_img(uid: str) -> Union[str, bytes]:
+    # 基础信息
     detail = await va_api.get_player_info(uid)
 
     if isinstance(detail, (int, str)):
@@ -42,42 +40,59 @@ async def get_va_info_img(uid: str) -> Union[str, bytes]:
         return card
 
     scene = card["role_info"]["friend_scene"]
+    # 并发请求所有数据
+    results = await asyncio.gather(
+        va_api.get_detail_card(scene),
+        va_api.get_online(uid, sence),
+        va_api.get_gun(uid, scene),
+        va_api.get_pf(uid, scene),
+        va_api.get_vive(uid, scene),
+        return_exceptions=True,
+    )
 
-    cardetail = await va_api.get_detail_card(scene)
-    if isinstance(cardetail, int):
-        logger.info(cardetail)
-        cardetail = None
-    if isinstance(cardetail, str):
-        logger.info(cardetail)
-        cardetail = None
+    cardetail_raw, online_raw, gun_raw, hero_raw, vive_raw = results
 
-    # logger.info(f'scene: {scene}')
-    seeson_id = card["role_info"]["session_id"]
-    logger.info(f"seeson_id: {seeson_id}")
-    online = await va_api.get_online(uid, sence)
+    cardetail: Optional[List[Battle]] = None
+    if isinstance(cardetail_raw, (int, str, BaseException)):
+        logger.info(f"cardetail error: {cardetail_raw}")
+    else:
+        cardetail = cardetail_raw
 
-    if isinstance(online, int):
-        logger.error(get_error(online))
-        online = None
+    online: Optional[CardOnline] = None
+    if isinstance(online_raw, (int, BaseException)):
+        logger.error(
+            f"online error: {get_error(online_raw) if isinstance(online_raw, int) else online_raw}"
+        )
+    else:
+        online = online_raw
 
-    gun = await va_api.get_gun(uid, scene)
-    if isinstance(gun, int):
-        return get_error(gun)
+    if isinstance(gun_raw, BaseException):
+        logger.error(f"gun error: {gun_raw}")
+        return "获取武器数据失败"
+    if isinstance(gun_raw, int):
+        return get_error(gun_raw)
+    gun: List[GunInfo] = gun_raw
 
-    # map_ = await va_api.get_map(scene)
-    # if isinstance(map_, int):
-    #     logger.error(get_error(map_))
-    #     map_ = None
-    hero = await va_api.get_pf(uid, scene)
-    if isinstance(hero, int):
-        return get_error(hero)
+    if isinstance(hero_raw, BaseException):
+        logger.error(f"hero error: {hero_raw}")
+        return "获取英雄数据失败"
+    if isinstance(hero_raw, int):
+        return get_error(hero_raw)
+    hero: List[PFInfo] = hero_raw
 
-    vive = await va_api.get_vive(uid, scene)
-    if isinstance(vive, int):
-        return get_error(vive)
+    if isinstance(vive_raw, BaseException):
+        logger.error(f"vive error: {vive_raw}")
+        return "获取vive数据失败"
+    if isinstance(vive_raw, int):
+        return get_error(vive_raw)
+    vive: List[Vive] = vive_raw
+
+    # seeson_id = card["role_info"]["session_id"]
+    # logger.info(f"seeson_id: {seeson_id}")
 
     if len(detail) == 0:
         return "报错了，检查控制台"
+
     return await draw_va_info_img(
         detail, card, cardetail, online, gun, hero, vive
     )
@@ -94,7 +109,7 @@ async def draw_va_info_img(
 ) -> bytes | str:
     if not card:
         return "token已过期"
-    # game_info = detail['gameInfoList'][0]
+
     card_info = card["card"]
     try:
         if (
@@ -108,26 +123,43 @@ async def draw_va_info_img(
         logger.error(e)
         return "未能查到战绩"
 
+    # 并发加载所有需要的远程图片
+    image_tasks = {
+        "head": save_img(detail["headUrl"], "head"),
+        "bg": save_img(card_info["bg_main_url"], "bg"),
+        "rank_small": save_img(card["layer_small"], "bg"),
+        "bg_hero": save_img(card_info["hero_url"], "hero1"),
+        "rank": save_img(card_info["left_data"]["image_url"], "rank"),
+        "weapon": save_img(card_info["right_data"]["image_url"], "weapon"),
+    }
+    image_results = await asyncio.gather(*image_tasks.values())
+    images = dict(zip(image_tasks.keys(), image_results))
+
+    # 创建主画布
     img = Image.new("RGBA", (1500, 2000), (15, 25, 35, 255))
     img_draw = ImageDraw.Draw(img)
-    # 头部信息
+
+    # === 头部信息 ===
     head_img = await draw_pic_with_ring(
-        await save_img(detail["headUrl"], "head"),
+        images["head"],
         size=140,
         is_ring=True,
-    )  # 128*128
+    )
     easy_paste(img, head_img, (120, 120), direction="cc")
 
+    # 在线状态
     if online is not None and online.get("online_text"):
-        if "在线" in online["online_text"]:
-            online_img = Image.open(TEXTURE / "online" / "online.png")
-        else:
-            online_img = Image.open(TEXTURE / "online" / "offline.png")
+        online_filename = (
+            "online.png" if "在线" in online["online_text"] else "offline.png"
+        )
+        online_img = get_cached_texture(f"online/{online_filename}")
         easy_paste(img, online_img, (180, 190), direction="cc")
 
-    line2 = Image.open(TEXTURE / "line2.png")
+    # 分割线
+    line2 = get_cached_texture("line2.png")
     easy_paste(img, line2, (220, 68))
 
+    # 文字信息
     img_draw.text(
         (240, 60), detail["nickName"], (255, 255, 255, 255), va_font_42
     )
@@ -138,18 +170,20 @@ async def draw_va_info_img(
         (240, 160), f"UID {detail['appNum']}", (200, 200, 200, 255), va_font_20
     )
 
-    # 综合信息
-    rank_bg = await save_img(card_info["bg_main_url"], "bg")
+    # === 综合信息 ===
+    rank_bg = images["bg"]
     rank_draw = ImageDraw.Draw(rank_bg)
-    rank_small = await save_img(card["layer_small"], "bg")
-    rank_bg.paste(rank_small, (0, 610), rank_small)
+    rank_bg.paste(images["rank_small"], (0, 610), images["rank_small"])
+    easy_paste(rank_bg, images["bg_hero"], (0, 0), "lt")
 
-    bg_hero = await save_img(card_info["hero_url"], "hero1")
-    easy_paste(rank_bg, bg_hero, (0, 0), "lt")
-    # 左侧
-    rank_url = card_info["left_data"]["image_url"]
-    rank_img = await save_img(rank_url, "rank")
-    # logger.info(card_info)
+    # 使用辅助函数绘制文本，减少重复代码
+    def draw_stat(x: int, y: int, value: str, label: str):
+        rank_draw.text((x, y), value, (255, 255, 255, 255), va_font_42, "mm")
+        rank_draw.text(
+            (x, y + 40), label, (255, 255, 255, 255), va_font_20, "mm"
+        )
+
+    # 左侧信息
     rank_draw.text(
         (100, 170),
         card_info["left_data"]["title"],
@@ -157,312 +191,74 @@ async def draw_va_info_img(
         va_font_20,
         "mm",
     )
-    easy_paste(rank_bg, rank_img.resize((80, 80)), (100, 100), "cc")
+    easy_paste(rank_bg, images["rank"].resize((80, 80)), (100, 100), "cc")
 
-    rank_draw.text(
-        (100, 260),
-        f"Lv{detail['gameInfoList'][0]['level']}",
-        (255, 255, 255, 255),
-        va_font_42,
-        "mm",
+    draw_stat(100, 260, f"Lv{detail['gameInfoList'][0]['level']}", "游戏等级")
+    draw_stat(
+        100, 390, card_info["left_data"]["list"][1]["content"], "游戏时长"
     )
-    rank_draw.text(
-        (100, 300),
-        "游戏等级",
-        (255, 255, 255, 255),
-        va_font_20,
-        "mm",
+    draw_stat(100, 520, card_info["left_data"]["list"][2]["content"], "ACS")
+    draw_stat(280, 520, card_info["middle_data"]["content"], "KAST")
+    draw_stat(460, 520, card_info["round_win_rate"]["content"], "回合胜率")
+    draw_stat(
+        640, 520, card_info["right_data"]["list"][2]["content"], "赛季精准击败"
     )
-
-    rank_draw.text(
-        (100, 390),
-        f"{card_info['left_data']['list'][1]['content']}",
-        (255, 255, 255, 255),
-        va_font_42,
-        "mm",
+    draw_stat(
+        640, 390, card_info["right_data"]["list"][1]["content"], "赛季胜率"
     )
-    rank_draw.text(
-        (100, 430), "游戏时长", (255, 255, 255, 255), va_font_20, "mm"
+    draw_stat(
+        640, 260, card_info["right_data"]["list"][0]["content"], "赛季KDA"
     )
 
-    rank_draw.text(
-        (100, 520),
-        f"{card_info['left_data']['list'][2]['content']}",
-        (255, 255, 255, 255),
-        va_font_42,
-        "mm",
-    )
-    rank_draw.text((100, 560), "ACS", (255, 255, 255, 255), va_font_20, "mm")
-
-    rank_draw.text(
-        (280, 520),
-        f"{card_info['middle_data']['content']}",
-        (255, 255, 255, 255),
-        va_font_42,
-        "mm",
-    )
-    rank_draw.text((280, 560), "KAST", (255, 255, 255, 255), va_font_20, "mm")
-
-    rank_draw.text(
-        (460, 520),
-        f"{card_info['round_win_rate']['content']}",
-        (255, 255, 255, 255),
-        va_font_42,
-        "mm",
-    )
-    rank_draw.text(
-        (460, 560), "回合胜率", (255, 255, 255, 255), va_font_20, "mm"
-    )
-
-    rank_draw.text(
-        (640, 520),
-        f"{card_info['right_data']['list'][2]['content']}",
-        (255, 255, 255, 255),
-        va_font_42,
-        "mm",
-    )
-    rank_draw.text(
-        (640, 560), "赛季精准击败", (255, 255, 255, 255), va_font_20, "mm"
-    )
-
-    rank_draw.text(
-        (640, 390),
-        f"{card_info['right_data']['list'][1]['content']}",
-        (255, 255, 255, 255),
-        va_font_42,
-        "mm",
-    )
-    rank_draw.text(
-        (640, 430), "赛季胜率", (255, 255, 255, 255), va_font_20, "mm"
-    )
-
-    rank_draw.text(
-        (640, 260),
-        f"{card_info['right_data']['list'][0]['content']}",
-        (255, 255, 255, 255),
-        va_font_42,
-        "mm",
-    )
-    rank_draw.text(
-        (640, 300), "赛季KDA", (255, 255, 255, 255), va_font_20, "mm"
-    )
-
-    weapon_img = await save_img(card_info["right_data"]["image_url"], "weapon")
-    easy_paste(rank_bg, weapon_img.resize((150, 82)), (640, 100), "cc")
+    # 最佳武器
+    easy_paste(rank_bg, images["weapon"].resize((150, 82)), (640, 100), "cc")
     rank_draw.text(
         (640, 170), "最佳武器", (255, 255, 255, 255), va_font_20, "mm"
     )
 
-    img.paste(
-        rank_bg,
-        (0, 180),
-        rank_bg,
-    )
+    img.paste(rank_bg, (0, 180), rank_bg)
 
-    # 左下信息
-    left_bg = Image.open(TEXTURE / "base1.png")
+    # === 左下信息 ===
+    left_bg = get_cached_texture("base1.png")
+    # left_draw = ImageDraw.Draw(left_bg)
 
-    hero_bg = Image.open(TEXTURE / "bg_val_mine_header.png")
-    # 750*368
-    hero_draw = ImageDraw.Draw(hero_bg)
-    hero_draw.text(
-        (100, 20),
-        "英雄",
-        (255, 255, 255, 255),
-        va_font_30,
-        "mm",
-    )
-    hero_draw.text(
-        (300, 20),
-        "时长",
-        (255, 255, 255, 255),
-        va_font_30,
-        "mm",
-    )
-    hero_draw.text(
-        (400, 20),
-        "对局数",
-        (255, 255, 255, 255),
-        va_font_30,
-        "mm",
-    )
-    hero_draw.text(
-        (500, 20),
-        "胜率",
-        (255, 255, 255, 255),
-        va_font_30,
-        "mm",
-    )
-    hero_draw.text(
-        (600, 20),
-        "KD",
-        (255, 255, 255, 255),
-        va_font_30,
-        "mm",
-    )
+    # 绘制英雄/武器数据
+    await DrawUtils.draw_hero_section(left_bg, hero)
+    await DrawUtils.draw_weapon_section(left_bg, gun)
 
-    for index, one_hero in enumerate(hero, start=1):
-        if index == 4:
-            break
-        hero_one = Image.new("RGBA", (700, 70), (0, 0, 0, 0))
-        hero_img = await save_img(one_hero["image_url"], "hero2")
+    easy_paste(img, left_bg, (20, 790), "lt")
 
-        head_bg = Image.new("RGBA", (50, 50), "orange")
-        head_draw = ImageDraw.Draw(head_bg)
-        head_draw.rounded_rectangle((0, 0, 50, 50), radius=5, fill="orange")
-        easy_paste(head_bg, hero_img.resize((50, 50)), (0, 0), "lt")
-        easy_paste(hero_one, head_bg, (50, 35), "cc")
-
-        one_draw = ImageDraw.Draw(hero_one)
-        one_draw.text(
-            (110, 35),
-            one_hero["agent_name"],
-            (255, 255, 255, 255),
-            va_font_30,
-            "mm",
-        )
-        one_draw.text(
-            (380, 35),
-            one_hero["part"],
-            "white",
-            va_font_30,
-            "mm",
-        )
-        one_draw.text(
-            (460, 35),
-            one_hero["win_rate"],
-            "white",
-            va_font_30,
-            "mm",
-        )
-        one_draw.text(
-            (580, 35),
-            one_hero["kd"],
-            "white",
-            va_font_30,
-            "mm",
-        )
-        easy_paste(hero_bg, hero_one, (20, index * 80 - 20))
-
-    easy_paste(left_bg, hero_bg, (20, 40), "lt")
-
-    # 武器信息
-
-    if gun is not None:
-        for index, one_gun in enumerate(gun, start=1):
-            if index == 9:
-                break
-            weapon_bg = Image.open(TEXTURE / "weapon.png")
-            weapon_draw = ImageDraw.Draw(weapon_bg)
-            one_weapon = await save_img(one_gun["image_url"], "weapon")
-            easy_paste(
-                weapon_bg, one_weapon.resize((190, 99)), (50, -10), "lt"
-            )
-            weapon_draw.text(
-                (35, 110),
-                one_gun["kill"],
-                (255, 255, 255, 255),
-                va_font_20,
-                "mm",
-            )
-            weapon_draw.text(
-                (95, 110),
-                one_gun["kill_head"],
-                (255, 255, 255, 255),
-                va_font_20,
-                "mm",
-            )
-            weapon_draw.text(
-                (172, 110),
-                one_gun["kill_round"],
-                (255, 255, 255, 255),
-                va_font_20,
-                "mm",
-            )
-            weapon_draw.text(
-                (240, 100),
-                f"{one_gun['kill_farthest']}",
-                (255, 255, 255, 255),
-                va_font_20,
-            )
-            weapon_x = 20
-            weapon_y = 370
-            while index > 2:
-                index -= 2
-                weapon_y += 190
-            weapon_x += (index - 1) * 350
-            easy_paste(left_bg, weapon_bg, (weapon_x, weapon_y), "lt")
-
-        easy_paste(img, left_bg, (20, 790), "lt")
-
-    # 右上信息
-
+    # === 右上信息 - 能力图 ===
     img_draw.text((800, 100), "能力图❔", (255, 255, 255, 255), va_font_42)
-    six_info = vive[1]["body"]["radar_chart"]["tabs"][0]
 
+    six_info = vive[1]["body"]["radar_chart"]["tabs"][0]
     p_six_info = vive[1]["body"]["radar_chart"]["player_dict"]
 
-    # 创建基础图像
-    base_image = Image.open(TEXTURE / "six_bg.png")
+    base_image = get_cached_texture("six_bg.png")
 
-    # 绘制第一个六边形
-    draw_hexagonal_panel(
-        six_info["proportion_array"],
+    # 绘制六边形
+    DrawUtils.draw_hexagonal_panel(
+        [float(x) for x in six_info["proportion_array"]],
         base_image,
-        fill_color=(255, 255, 255, 100),  # 透明填充
+        fill_color=(255, 255, 255, 100),
     )
 
-    # 绘制第二个白色实心六边形
-    draw_hexagonal_panel(
-        p_six_info["proportion_array"],
-        base_image,
-        fill_color=(255, 255, 255, 255),  # 白色实心填充
-    )
-
-    # 文字部分
+    # 绘制数据标签
     draw_base = ImageDraw.Draw(base_image)
-    draw_base.text(
+    data_positions = [
         (365, 88),
-        f"{p_six_info['data_array'][0]} | {six_info['data_array'][0]}",
-        "white",
-        va_font_20,
-        "mm",
-    )
-    draw_base.text(
         (135, 210),
-        f"{p_six_info['data_array'][1]} | {six_info['data_array'][1]}",
-        "white",
-        va_font_20,
-        "mm",
-    )
-    draw_base.text(
         (135, 392),
-        f"{p_six_info['data_array'][2]} | {six_info['data_array'][2]}",
-        "white",
-        va_font_20,
-        "mm",
-    )
-    draw_base.text(
         (365, 480),
-        f"{p_six_info['data_array'][3]} | {six_info['data_array'][3]}",
-        "white",
-        va_font_20,
-        "mm",
-    )
-    draw_base.text(
         (590, 392),
-        f"{p_six_info['data_array'][4]} | {six_info['data_array'][4]}",
-        "white",
-        va_font_20,
-        "mm",
-    )
-    draw_base.text(
         (590, 210),
-        f"{p_six_info['data_array'][5]} | {six_info['data_array'][5]}",
-        "white",
-        va_font_20,
-        "mm",
-    )
+    ]
+    for pos, (six_val, p_six_val) in zip(
+        data_positions, zip(six_info["data_array"], p_six_info["data_array"])
+    ):
+        draw_base.text(
+            pos, f"{p_six_val} | {six_val}", "white", va_font_20, "mm"
+        )
 
     draw_base.text(
         (465, 628), six_info["sub_tab_name"], "white", va_font_30, "mm"
@@ -470,219 +266,20 @@ async def draw_va_info_img(
 
     easy_paste(img, base_image, (750, 50))
 
-    # 右下信息
-
-    right_bg = Image.open(TEXTURE / "base2.png")
+    # === 右下信息 ===
+    right_bg = get_cached_texture("base2.png")
     right_draw = ImageDraw.Draw(right_bg)
-    if vive is not None:
-        right_draw.text(
-            (370, 45),
-            f"{vive[1]['body']['shooting'][0]['content']}",
-            (255, 255, 255, 255),
-            va_font_30,
-            "mm",
-        )
-        right_draw.text(
-            (650, 45),
-            f"{vive[1]['body']['shooting'][0]['sub_content']}",
-            (255, 255, 255, 255),
-            va_font_30,
-            "mm",
-        )
-        right_draw.text(
-            (370, 120),
-            f"{vive[1]['body']['shooting'][1]['content']}",
-            (255, 255, 255, 255),
-            va_font_30,
-            "mm",
-        )
-        right_draw.text(
-            (650, 120),
-            f"{vive[1]['body']['shooting'][1]['sub_content']}",
-            (255, 255, 255, 255),
-            va_font_30,
-            "mm",
-        )
-        right_draw.text(
-            (370, 195),
-            f"{vive[1]['body']['shooting'][2]['content']}",
-            (255, 255, 255, 255),
-            va_font_30,
-            "mm",
-        )
-        right_draw.text(
-            (650, 195),
-            f"{vive[1]['body']['shooting'][2]['sub_content']}",
-            (255, 255, 255, 255),
-            va_font_30,
-            "mm",
-        )
-    # 战绩
-    if valcard is not None and not isinstance(valcard, int):
-        battle_y = 90
-        for index, one_valcard in enumerate(valcard, start=1):
-            if index == 7:
-                break
-            battle_bg = Image.new("RGBA", (750, 150), (0, 0, 0, 0))
-            battle_draw = ImageDraw.Draw(battle_bg)
 
-            # 基础赋值
-            if one_valcard["result_title"] == "胜利":
-                head2_bg = Image.open(TEXTURE / "green_head.png")
-                result = "win"
-            elif one_valcard["result_title"] == "失败":
-                head2_bg = Image.open(TEXTURE / "red_head.png")
+    # 绘制射击数据
+    DrawUtils.draw_vive_section(right_bg, right_draw, vive)
 
-                result = "fail"
-            else:
-                head2_bg = Image.open(TEXTURE / "grey_head.png")
-
-                result = "draw"
-
-            result_color = one_valcard["result_color"]
-            # logger.info(result_color)
-            score_color = one_valcard["score_color"]
-            # logger.info(score_color)
-
-            head2_img: Image.Image = (
-                await save_img(one_valcard["image_url"], "head2")
-            ).resize((82, 82))
-            easy_paste(head2_bg, head2_img, (0, 0), "lt")
-            easy_paste(battle_bg, head2_bg, (20, 25), "lt")
-
-            battle_draw.text(
-                (120, 20),
-                one_valcard["result_title"],
-                result_color,
-                va_font_42,
-            )
-            if one_valcard["score_level"].get("level").strip():
-                hero_name = 280
-                ranks_bg = Image.new("RGBA", (50, 50), (0, 0, 0, 0))
-                ranks_draw = ImageDraw.Draw(ranks_bg)
-                ranks_draw.rounded_rectangle(
-                    (0, 0, 50, 50),
-                    radius=5,
-                    fill=hex_to_rgba(result_color, alpha=255),
-                )
-                if result == "win":
-                    icon_key = "head_icon_win"
-                elif result == "fail":
-                    icon_key = "head_icon_fail"
-                else:
-                    icon_key = "head_icon_draw"
-                ranks_img = await save_img(
-                    one_valcard["score_level"][icon_key], "rank"
-                )
-                easy_paste(ranks_bg, ranks_img.resize((50, 50)), (0, 0), "lt")
-
-                easy_paste(battle_bg, ranks_bg, (215, 22), "lt")
-            else:
-                hero_name = 220
-
-            battle_draw.text(
-                (hero_name, 20), one_valcard["hero_name"], "white", va_font_42
-            )
-            battle_draw.text(
-                (120, 80), one_valcard["content"], "white", va_font_30
-            )
-
-            battle_draw.text(
-                (485, 25), one_valcard["kda"], "white", va_font_30
-            )
-
-            if one_valcard["score"]:
-                score_bg = Image.new("RGBA", (80, 40), (0, 0, 0, 0))
-                score_draw = ImageDraw.Draw(score_bg)
-                score_draw.rounded_rectangle(
-                    (0, 0, 80, 40),
-                    radius=15,
-                    fill=hex_to_rgba(score_color, alpha=255),
-                )
-
-                score_draw.text(
-                    (40, 20), one_valcard["score"], "white", va_font_20, "mm"
-                )
-                easy_paste(battle_bg, score_bg, (610, 25), "lt")
-                # logger.info(one_valcard['score'])
-
-            if one_valcard["is_friend"] == 1:
-                friend_img = Image.open(TEXTURE / "friend.png")
-                easy_paste(battle_bg, friend_img, (485, 80), "lt")
-
-            battle_draw.text(
-                (520, 80), one_valcard["time"], "white", va_font_20
-            )
-
-            # 成就
-            if one_valcard.get("achievement") is not None:
-                x = 360
-                for inde, one in enumerate(
-                    one_valcard["achievement"], start=1
-                ):
-                    ach_bg = await save_img(one["icon"], "icon")
-                    easy_paste(battle_bg, ach_bg, (x, 22), "lt")
-                    x -= (ach_bg.size[0] + 5) * inde
-            easy_paste(right_bg, battle_bg, (0, battle_y + index * 150), "lt")
-    # else:
-    #     bot_uid, _ = await va_api.get_token(uid)
-    #     bot_detail = await va_api.get_player_info(bot_uid)
-    #     if not isinstance(bot_detail, int) and not isinstance(bot_detail, str):
-    #         right_draw.text(
-    #             (350, 650),
-    #             "未添加bot好友，无法查询战绩信息",
-    #             "grey",
-    #             va_font_30,
-    #             "mm",
-    #         )
-    #         right_draw.text(
-    #             (350, 690),
-    #             "需要查询战绩请在掌上无畏契约添加好友",
-    #             "grey",
-    #             va_font_30,
-    #             "mm",
-    #         )
-    #         right_draw.text(
-    #             (350, 730),
-    #             f"掌瓦【{bot_detail['nickName']}】| UID【{bot_detail['appNum']}】",
-    #             "grey",
-    #             va_font_30,
-    #             "mm",
-    #         )
+    # 绘制战绩
+    await DrawUtils.draw_battle_section(right_bg, right_draw, valcard)
 
     easy_paste(img, right_bg, (750, 780), "lt")
 
-    footer = Image.open(TEXTURE / "footer.png")
+    # === 页脚 ===
+    footer = get_cached_texture("footer.png")
     easy_paste(img, footer, (750, 1980), "cc")
 
     return await convert_img(img)
-
-
-def hex_to_rgba(hex_color, alpha=255):
-    # 将十六进制颜色转换为 RGBA
-    hex_color = hex_color.lstrip("#")  # 去掉开头的 #
-    r = int(hex_color[0:2], 16)
-    g = int(hex_color[2:4], 16)
-    b = int(hex_color[4:6], 16)
-    return (r, g, b, alpha)
-
-
-def draw_hexagonal_panel(
-    proportion_array, image, fill_color=(255, 255, 255, 0)
-):
-    width, height = image.size
-    draw = ImageDraw.Draw(image)
-    logger.info(proportion_array)
-    center_x, center_y = width // 2 + 20, height // 2 - 50
-    hexagon_points = []
-
-    # 计算六边形的顶点（从正上方开始，逆时针）
-    for i in range(6):
-        angle = math.pi / 3 * i + math.pi / 2
-        length = proportion_array[i] / 100 * 200  # 将比例转换为长度
-        x = center_x + length * math.cos(angle)
-        y = center_y + length * math.sin(angle)
-        hexagon_points.append((x, y))
-
-    # 绘制六边形
-    draw.polygon(hexagon_points, fill=fill_color, outline=(0, 0, 0))

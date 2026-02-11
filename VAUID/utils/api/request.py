@@ -1,4 +1,5 @@
 import json as js
+import time
 import random
 from copy import deepcopy
 from typing import Any, Dict, List, Union, Literal, Optional, cast
@@ -14,6 +15,7 @@ from .api import (
     GunAPI,
     MapAPI,
     CardAPI,
+    ShopAPI,
     ViveAPI,
     OnlineAPI,
     SearchAPI,
@@ -21,6 +23,7 @@ from .api import (
     SummonerAPI,
 )
 from .models import (
+    Shop,
     Vive,
     Battle,
     PFInfo,
@@ -110,7 +113,7 @@ class WeGameApi:
                 ],
             },
         )
-        logger.info(data)
+        # logger.info(data)
         if isinstance(data, int):
             return data
         if data["msg"] != "success":
@@ -221,7 +224,7 @@ class WeGameApi:
                 "scene": scene,
             },
         )
-        logger.info(data)
+        # logger.info(data)
         if isinstance(data, int):
             return data
         return cast(CardOnline, data["data"])
@@ -291,3 +294,21 @@ class WeGameApi:
         if isinstance(data, int):
             return data
         return cast(List[PFInfo], data["data"]["list"])
+
+    async def get_shop(self, uid: str, scene: str):
+        _, ck = await self.get_token(uid)
+        timestamp = int(time.time())
+        data = {
+            "_t": timestamp,
+            "scene": scene,
+            "source_game_zone": "agame",
+            "game_zone": "agame",
+        }
+        header = self._HEADER
+        header["cookie"] = ck
+        data = await self._va_request(
+            ShopAPI, method="POST", header=header, json=data
+        )
+        if isinstance(data, int):
+            return data
+        return cast(List[Shop], data["data"])

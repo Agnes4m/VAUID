@@ -92,12 +92,12 @@ async def on_valo_login(bot: Bot, ev: Event):
                             login_temp_data["access_token"] = access_token
                             login_temp_data["appid"] = appid
                             logger.info(
-                                f"[ValLogin] 成功解析凭证: OpenID={openid[:5]}..., Token={access_token[:5]}..."
+                                f"[Val] 成功解析凭证: OpenID={openid[:5]}..., Token={access_token[:5]}..."
                             )
                             login_success_event.set()
                         else:
                             logger.error(
-                                f"[ValLogin] 解析失败，URL内容: {fragment}"
+                                f"[Val] 解析失败，URL内容: {fragment}"
                             )
 
         page.on("response", handle_response)
@@ -105,9 +105,11 @@ async def on_valo_login(bot: Bot, ev: Event):
         # 截图
         await page.goto(LOGIN_URL)
         qr_element = await page.wait_for_selector("#qrimg")
-        qr_bytes = (
-            await qr_element.screenshot()
-        )  # pyright: ignore[reportOptionalMemberAccess]
+        if qr_element is None:
+            await bot.send("未能获取到二维码，请稍后重试。")
+            await browser.close()
+            return
+        qr_bytes = await qr_element.screenshot()
 
         await bot.send(
             [
