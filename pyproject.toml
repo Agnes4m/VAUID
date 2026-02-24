@@ -33,7 +33,7 @@ readme = "README.md"
 homepage = "https://github.com/Agnes4m/VAUID"
 repository = "https://github.com/Agnes4m/VAUID"
 documentation = "https://docs.sayu-bot.com/"
-packages = [{ include = "VALUID" }]
+packages = [{ include = "VAUID" }]
 exclude = ["tests", "deploy"]
 
 [tool.poetry.urls]
@@ -44,10 +44,7 @@ python = "^3.8.1"
 [[tool.poetry.source]]
 name = "USTC"
 url = "https://pypi.mirrors.ustc.edu.cn/simple"
-priority = "primary"
-
-[tool.pyright]
-disableBytesTypePromotions = false
+priority = "default"
 
 [tool.basedpyright]
 deprecateTypingAliases = false
@@ -56,9 +53,7 @@ deprecateTypingAliases = false
 name = "VAUID"
 version = "0.1.0"
 description = "基于gsuid-core, 支持NoneBot2 & HoshinoBot & ZeroBot & YunzaiBot的全功能某FPS游戏Bot插件"
-authors = [
-  { name = "Agnes Digital", email = "Z735803792@163.com" }
-]
+authors = [{ name = "Agnes Digital", email = "Z735803792@163.com" }]
 dependencies = []
 requires-python = "==3.10.*"
 readme = "README.md"
