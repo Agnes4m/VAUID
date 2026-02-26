@@ -22,6 +22,11 @@ from ..utils.api.models import (
     SummonerInfo,
 )
 from ..utils.error_reply import get_error
+from ..utils.api.model.asset import (
+    SkinData,
+    AgentData,
+    CollectionData,
+)
 
 
 async def get_va_info_img(ev: Event, uid: str) -> Union[str, bytes]:
@@ -283,5 +288,154 @@ async def draw_va_info_img(
     # === 页脚 ===
     footer = get_cached_texture("footer.png")
     easy_paste(img, footer, (750, 1980), "cc")
+
+    return await convert_img(img)
+
+
+async def draw_asset_section(
+    img: Image.Image,
+    img_draw: ImageDraw.ImageDraw,
+    section_data: Union[SkinData, AgentData, CollectionData],
+    section_name: str,
+    y_offset: int,
+    size: tuple[int, int] = (80, 80),
+    icon_key: str = "icon",
+    name_key: str = "name",
+    title_offset: int = 50,  # 标题下方间距
+    row_offset: int = 120,  # 每行物品下方间距
+    max_items: int = 20,  # 最多显示物品数
+    items_per_row: int = 5,  # 每行物品数
+    item_spacing: int = 220,  # 物品之间水平间距
+    section_bottom_offset: int = 50,  # 分类底部间距
+) -> int:
+    """绘制资产分类区域
+
+    Args:
+        img: 主画布
+        img_draw: 画布绘制对象
+        section_data: 分类数据
+        section_name: 分类名称
+        y_offset: 当前 Y 坐标
+        size: 图标大小 (宽，高)
+        icon_key: 图标字段名
+        name_key: 名称字段名
+        title_offset: 标题下方间距
+        row_offset: 每行物品下方间距
+        max_items: 最多显示物品数
+        items_per_row: 每行物品数
+        item_spacing: 物品之间水平间距
+        section_bottom_offset: 分类底部间距
+
+    Returns:
+        更新后的 Y 坐标
+    """
+    items = section_data.get("list", [])
+    if not items:
+        return y_offset
+
+    # 分类标题
+    img_draw.text((100, y_offset), section_name, (255, 255, 255, 255), va_font_30)
+    y_offset += title_offset
+
+    # 绘制物品
+    for i, item in enumerate(items[:max_items]):
+        if i % items_per_row == 0:
+            y_offset += row_offset
+
+        x = 100 + (i % items_per_row) * item_spacing
+        y = y_offset
+
+        # 绘制物品图标
+        try:
+            icon_url = item.get(icon_key, "") or item.get("avatar", "")
+            if icon_url:
+                item_icon = await save_img(icon_url, "asset_icon")
+                item_icon = item_icon.resize(size)
+                easy_paste(img, item_icon, (x, y), "lt")
+        except Exception:
+            pass
+
+        # 绘制物品名称
+        item_name = item.get(name_key, "未知物品")
+        img_draw.text((x + 50, y + 90), item_name, (255, 255, 255, 255), va_font_20, "mm")
+
+    y_offset += section_bottom_offset
+    return y_offset
+
+
+async def get_va_asset_img(ev: Event, uid: str) -> Union[str, bytes]:
+    """获取玩家资产信息图片
+
+    Args:
+        ev: 事件对象
+        uid: 目标用户 UID
+
+    Returns:
+        图片字节或错误信息字符串
+    """
+    # 创建查询上下文 - 使用查询人自身的 cookie
+    ctx = await va_api.create_context(ev)
+
+    # 获取玩家信息以获取 scene
+    detail = await va_api.get_player_info(ctx, [uid])
+    if isinstance(detail, (int, str)):
+        return get_error(detail) if isinstance(detail, int) else detail
+    if detail is None:
+        return "未查询到玩家信息"
+    scene = detail["gameInfoList"][0]["scene"]
+
+    # 获取资产数据
+    asset_data = await va_api.get_asset(scene, ctx.cookie, ctx.get_random_cookie)
+    if isinstance(asset_data, int):
+        return get_error(asset_data)
+    if isinstance(asset_data, str):
+        return asset_data
+    if not asset_data or not isinstance(asset_data, dict):
+        return "未查询到资产数据"
+
+    # 创建画布
+    img = Image.new("RGBA", (1200, 1600), (15, 25, 35, 255))
+    img_draw = ImageDraw.Draw(img)
+
+    # 标题
+    img_draw.text((600, 30), f"UID {detail['nickName']} 的资产", (255, 255, 255, 255), va_font_42, "mm")
+
+    # 绘制各分类
+    y_offset = 100
+
+    # 1. 皮肤 (Skin)
+    skin_data = asset_data.get("skin", {})
+    if skin_data:
+        y_offset = await draw_asset_section(
+            img, img_draw, skin_data, "皮肤", y_offset, icon_key="icon", name_key="name", size=(150, 80)
+        )
+
+    # 2. 英雄 (Agent)
+    agent_data = asset_data.get("agent", {})
+    if agent_data:
+        y_offset = await draw_asset_section(
+            img, img_draw, agent_data, "英雄", y_offset, icon_key="icon", name_key="name"
+        )
+
+    # 3. 喷漆 (Spray)
+    spray_data = asset_data.get("spray", {})
+    if spray_data:
+        y_offset = await draw_asset_section(
+            img, img_draw, spray_data, "喷漆", y_offset, icon_key="icon", name_key="name"
+        )
+
+    # 4. 卡面 (Card)
+    card_data = asset_data.get("card", {})
+    if card_data:
+        y_offset = await draw_asset_section(
+            img, img_draw, card_data, "卡面", y_offset, icon_key="icon", name_key="name", size=(80, 150)
+        )
+
+    # 5. 挂饰 (Charm)
+    charm_data = asset_data.get("charm", {})
+    if charm_data:
+        y_offset = await draw_asset_section(
+            img, img_draw, charm_data, "挂饰", y_offset, icon_key="icon", name_key="name"
+        )
 
     return await convert_img(img)

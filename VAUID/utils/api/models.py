@@ -3,11 +3,11 @@ from typing import List, Literal, Optional, TypedDict
 
 class LoginData(TypedDict):
     openid: List[str]
-    """用户的id"""
+    """用户的 id"""
     appid: List[str]
-    """用户的appid"""
+    """用户的 appid"""
     access_token: List[str]
-    """用户的access_token"""
+    """用户的 access_token"""
     pay_token: List[str]
     key: List[str]
     browser: List[str]
@@ -17,7 +17,7 @@ class LoginData(TypedDict):
     status_os: List[str]
     sdkv: List[str]
     status_machine: List[str]
-    """用户的status_machine"""
+    """用户的 status_machine"""
     update_auth: List[str]
     """1"""
     has_auth: List[str]
@@ -35,9 +35,9 @@ class ResultInfo(TypedDict):
 
 class GameInfo(TypedDict):
     uuid: str
-    """用户的id"""
+    """用户的 id"""
     scene: str
-    """用户的sc"""
+    """用户的 sc"""
     gameHeadUrl: str
     """用户头像"""
     areaName: str
@@ -60,20 +60,20 @@ class GameInfo(TypedDict):
     league_point: str
     """当前段位分数"""
     role_identity: str
-    """role_id用途未知"""
+    """role_id 用途未知"""
 
 
 class SummonerInfo(TypedDict):
     uuid: str
-    """用户的ID"""
+    """用户的 ID"""
     nickName: str
     """用户的名称"""
     headUrl: str
-    """用户头像url"""
+    """用户头像 url"""
     backgroundImgUrl: str
-    """背景图url"""
+    """背景图 url"""
     appNum: str
-    """qq号"""
+    """qq 号"""
     gameInfoList: List[GameInfo]
 
 
@@ -99,13 +99,13 @@ class InfoBody(TypedDict):
     userDesc: str
     """掌盟账号"""
     userAppNum: str
-    """qq号"""
+    """qq 号"""
     showIndex: int
     """是否展示信息"""
     focus: bool
     """默认不是不知道是啥"""
     isVip: bool
-    """默认false"""
+    """默认 false"""
     tag: List[Tag_point]
     isOnline: bool
     """是否在线"""
@@ -134,7 +134,7 @@ class RoleInfo(TypedDict):
     friend_scene: str
     """和上面那个一样"""
     my_roleid: str
-    """角色roleid"""
+    """角色 roleid"""
 
 
 class ReportInfo(TypedDict):
@@ -186,7 +186,7 @@ class CardUrl(TypedDict):
     bg_main_url: str
     """背景图片"""
     bg_text_url: str
-    """背景文字|通常是空的"""
+    """背景文字 | 通常是空的"""
     bg_bottom_layer_url: str
     """背景底图"""
     bg_good_red_url: str
@@ -210,7 +210,7 @@ class CardUrl(TypedDict):
     hero_name: str
     """英雄名称"""
     share_or_copy_url: str
-    """分享或复制按钮url"""
+    """分享或复制按钮 url"""
     qr_code_url: str
     """二维码"""
     left_data: Optional[LeftData]
@@ -258,7 +258,7 @@ class ListInfo(TypedDict):
 class CardDetail(TypedDict):
     left_data: ListInfo
     """左边数据
-    赛季KDA  | 生涯时长
+    赛季 KDA  | 生涯时长
     段位图片
     段位名称
     """
@@ -288,7 +288,7 @@ class GunInfo(TypedDict):
     """武器数据"""
 
     id: str
-    """武器id"""
+    """武器 id"""
     name: str
     """武器名称"""
     image_url: str
@@ -300,24 +300,24 @@ class GunInfo(TypedDict):
     kill_round: str
     """回合击杀"""
     kill_farthest: str
-    """最远击杀距离(无单位)"""
+    """最远击杀距离 (无单位)"""
 
 
 class MapInfo(TypedDict):
     """地图信息"""
 
     agent_id: str
-    """地图id"""
+    """地图 id"""
     map_id: str
-    """地图id路径"""
+    """地图 id 路径"""
     name: str
     """地图名称"""
     map_icon: str
     """地图图标"""
     win_rate: str
-    """胜率(100.0)"""
+    """胜率 (100.0)"""
     best_hero_win_rate: str
-    """最佳英雄胜率(100.0)"""
+    """最佳英雄胜率 (100.0)"""
     best_hero_url: str
     """最佳英雄图标"""
     kd: str
@@ -339,9 +339,9 @@ class ScoreLevel(TypedDict):
     """评分数据"""
 
     id: int
-    """评分id, 0"""
+    """评分 id, 0"""
     level: str
-    """评分评价, B"""
+    """评分评价，B"""
     title: str
     """评分名称"""
     guide: str
@@ -365,7 +365,7 @@ class UsedMap(TypedDict):
     """地图信息"""
 
     id: int
-    """地图id, 0"""
+    """地图 id, 0"""
     name: str
     """地图名称"""
     e_name: str
@@ -392,9 +392,9 @@ class Achievement(TypedDict):
     """成就信息"""
 
     id: str
-    """成就id"""
+    """成就 id"""
     icon: str
-    """成就图标130* 40"""
+    """成就图标 130* 40"""
     width: int
     """成就图标宽度"""
     height: int
@@ -411,11 +411,11 @@ class Battle(TypedDict):
     """战斗数据"""
 
     battle_id: str
-    """战斗id"""
+    """战斗 id"""
     match_id: str
-    """匹配id"""
+    """匹配 id"""
     image_url: str
-    """使用角色url"""
+    """使用角色 url"""
     result_title: str
     """胜利  |  平局  |  失败"""
     result_color: str
@@ -437,15 +437,15 @@ class Battle(TypedDict):
     intent: str
     """游戏内跳转链接"""
     role_id: str
-    """角色id"""
+    """角色 id"""
     kda_score: str
-    """kda分数"""
+    """kda 分数"""
     score_avg: str
     """平均分数"""
     kill_death: str
     """空值"""
     game_mode: str
-    """游戏模式(普通、排位)"""
+    """游戏模式 (普通、排位)"""
     game_mode_icon: str
     """游戏模式图标"""
     used_map: UsedMap
@@ -471,7 +471,7 @@ class ValBattle(TypedDict):
     """战斗数据"""
 
     next_baton: str
-    """下一把武器uid"""
+    """下一把武器 uid"""
     battle_list: List[Battle]
     msg: str
     """两个月内的记录"""
@@ -481,7 +481,7 @@ class Header(TypedDict):
     """头部信息"""
 
     layout_type: str
-    """信息id
+    """信息 id
     - 1005
     - 1006 能力图
     """
@@ -502,13 +502,13 @@ class tv(TypedDict):
     heights: List[int]
     """段位高度"""
     x: List[int]
-    """段位坐标(0123456789)"""
+    """段位坐标 (0123456789)"""
     y: List[int]
-    """段位坐标(段位)"""
+    """段位坐标 (段位)"""
     rate: List[List[int]]
-    """段位坐标(xy)"""
+    """段位坐标 (xy)"""
     max_point: List[int]
-    """段位最高坐标(xy)"""
+    """段位最高坐标 (xy)"""
     max_value_text: str
     """段位最高名称"""
     max_value_icon: str
@@ -571,7 +571,7 @@ class Body(TypedDict):
     - 近期表现 A
     """
     line_chart_list: List[tv]
-    """段位趋势 2个"""
+    """段位趋势 2 个"""
     second_list: List[tc]
     """
     - 胜率
@@ -579,7 +579,7 @@ class Body(TypedDict):
     - KAST
     - 总时长
     """
-    # 以上第一个 ， 以下能力图
+    # 以上第一个，以下能力图
 
     radar_chart: RadarChart
     """能力图"""
@@ -602,7 +602,7 @@ class PFInfo(TypedDict):
     """使用角色信息"""
 
     id: str
-    """角色id"""
+    """角色 id"""
     image_url: str
     """角色图标"""
     icon: str
@@ -616,7 +616,7 @@ class PFInfo(TypedDict):
     win_rate: str
     """胜率"""
     agent_id: str
-    """角色id"""
+    """角色 id"""
 
     bg_font: str
     """背景字体"""
@@ -647,7 +647,7 @@ class ShopDay(TypedDict):
     - orange=yellow
     """
     bg_image: str
-    """UI通用品质背景图标"""
+    """UI 通用品质背景图标"""
     showed: int
     """0"""
     token: str
@@ -675,12 +675,12 @@ class ShopKing(TypedDict):
     """价格"""
     quality: Literal["green", "blue", "purple", "orange", ""]
     """品质
-    - purple=pink背景
-    - orange=yellow背景
+    - purple=pink 背景
+    - orange=yellow 背景
     - 王国商店为空
     """
     bg_image: str
-    """UI通用品质背景图标"""
+    """UI 通用品质背景图标"""
     showed: int
     """是否展示"""
     token: str
@@ -696,8 +696,8 @@ class Shop(TypedDict):
     key: Literal["dailystore", "kingdomstore"]
     title: str
     """商店标题
-    - 每日商店(枪，刀)
-    - 王国商店(喷漆，挂饰)
+    - 每日商店 (枪，刀)
+    - 王国商店 (喷漆，挂饰)
     """
     time: float
     """商店时间"""

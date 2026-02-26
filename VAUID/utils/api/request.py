@@ -14,6 +14,7 @@ from .api import (
     CardAPI,
     ShopAPI,
     ViveAPI,
+    AssetAPI,
     OnlineAPI,
     SearchAPI,
     ValCardAPI,
@@ -31,6 +32,7 @@ from .models import (
     CardOnline,
     SummonerInfo,
 )
+from .model.asset import AssetData
 from ..database.models import ValUser
 
 SEASON_ID = "dcde7346-4085-de4f-c463-2489ed47983b"
@@ -515,3 +517,40 @@ class WeGameApi:
             return -511
         data = await self._va_request(ShopAPI, headers={"Cookie": random_ck}, json=json_data)
         return self._parse_response(data, lambda d: cast(List[Shop], d["data"]), default_on_error="")
+
+    async def get_asset(
+        self,
+        scene: str,
+        cookie: Optional[str] = None,
+        get_random_cookie: Optional[Callable[[], Any]] = None,
+    ) -> AssetData | int:
+        """获取玩家资产信息（皮肤、配件等）
+
+        Args:
+            scene: 场景 ID
+            cookie: 可选的 cookie，优先使用此 cookie，失败后使用随机 cookie
+            get_random_cookie: 获取随机 cookie 的异步方法
+        """
+        json_data = {
+            "scene": scene,
+            "source_game_zone": "agame",
+            "game_zone": "agame",
+        }
+
+        # 优先使用提供的 cookie
+        if cookie:
+            data = await self._va_request(AssetAPI, headers={"Cookie": cookie}, json=json_data)
+            result = self._parse_response(data, lambda d: cast(AssetData, d["data"]), default_on_error="")
+            if not isinstance(result, int) or result >= 0:
+                return result
+            logger.debug(f"使用用户 cookie 请求失败，尝试使用随机 cookie: {result}")
+
+        # 使用随机 cookie 重试
+        if get_random_cookie:
+            random_ck = await get_random_cookie()
+        else:
+            _, random_ck = await WeGameApi.get_sence()
+        if not random_ck:
+            return -511
+        data = await self._va_request(AssetAPI, headers={"Cookie": random_ck}, json=json_data)
+        return self._parse_response(data, lambda d: cast(AssetData, d["data"]), default_on_error="")
