@@ -18,7 +18,7 @@ async def send_va_info_msg(bot: Bot, ev: Event):
     if not uid:
         return await bot.send(UID_HINT)
 
-    img = await get_va_shop_img(uid)
+    img = await get_va_shop_img(ev, uid)
     await bot.send(img)
 
 

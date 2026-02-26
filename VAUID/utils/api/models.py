@@ -649,7 +649,7 @@ class ShopDay(TypedDict):
     bg_image: str
     """UI通用品质背景图标"""
     showed: int
-    """是否展示"""
+    """0"""
     token: str
     show_mask_quality: int
     like_num: str

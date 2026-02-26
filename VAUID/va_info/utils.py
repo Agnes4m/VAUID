@@ -88,27 +88,19 @@ class DrawUtils:
             (600, 20, "KD"),
         ]
         for x, y, text in headers:
-            hero_draw.text(
-                (x, y), text, (255, 255, 255, 255), va_font_30, "mm"
-            )
+            hero_draw.text((x, y), text, (255, 255, 255, 255), va_font_30, "mm")
 
         # 并发加载所有英雄图片
-        hero_tasks = [
-            save_img(one_hero["image_url"], "hero2") for one_hero in hero[:3]
-        ]
+        hero_tasks = [save_img(one_hero["image_url"], "hero2") for one_hero in hero[:3]]
         hero_images = await asyncio.gather(*hero_tasks)
 
-        for index, (one_hero, hero_img) in enumerate(
-            zip(hero[:3], hero_images), start=1
-        ):
+        for index, (one_hero, hero_img) in enumerate(zip(hero[:3], hero_images), start=1):
             hero_one = Image.new("RGBA", (700, 70), (0, 0, 0, 0))
 
             # 创建圆角头像背景
             head_bg = Image.new("RGBA", (50, 50), "orange")
             head_draw = ImageDraw.Draw(head_bg)
-            head_draw.rounded_rectangle(
-                (0, 0, 50, 50), radius=5, fill="orange"
-            )
+            head_draw.rounded_rectangle((0, 0, 50, 50), radius=5, fill="orange")
             easy_paste(head_bg, hero_img.resize((50, 50)), (0, 0), "lt")
             easy_paste(hero_one, head_bg, (50, 35), "cc")
 
@@ -121,12 +113,8 @@ class DrawUtils:
                 va_font_30,
                 "mm",
             )
-            one_draw.text(
-                (380, 35), one_hero["part"], "white", va_font_30, "mm"
-            )
-            one_draw.text(
-                (460, 35), one_hero["win_rate"], "white", va_font_30, "mm"
-            )
+            one_draw.text((380, 35), one_hero["part"], "white", va_font_30, "mm")
+            one_draw.text((460, 35), one_hero["win_rate"], "white", va_font_30, "mm")
             one_draw.text((580, 35), one_hero["kd"], "white", va_font_30, "mm")
 
             easy_paste(hero_bg, hero_one, (20, index * 80 - 20))
@@ -140,20 +128,14 @@ class DrawUtils:
             return
 
         # 并发加载所有武器图片
-        weapon_tasks = [
-            save_img(one_gun["image_url"], "weapon") for one_gun in gun[:8]
-        ]
+        weapon_tasks = [save_img(one_gun["image_url"], "weapon") for one_gun in gun[:8]]
         weapon_images = await asyncio.gather(*weapon_tasks)
 
-        for index, (one_gun, one_weapon) in enumerate(
-            zip(gun[:8], weapon_images), start=1
-        ):
+        for index, (one_gun, one_weapon) in enumerate(zip(gun[:8], weapon_images), start=1):
             weapon_bg = get_cached_texture("weapon.png")
             weapon_draw = ImageDraw.Draw(weapon_bg)
 
-            easy_paste(
-                weapon_bg, one_weapon.resize((190, 99)), (50, -10), "lt"
-            )
+            easy_paste(weapon_bg, one_weapon.resize((190, 99)), (50, -10), "lt")
 
             # 绘制武器数据
             weapon_draw.text(
@@ -196,9 +178,7 @@ class DrawUtils:
             easy_paste(left_bg, weapon_bg, (weapon_x, weapon_y), "lt")
 
     @staticmethod
-    def draw_vive_section(
-        right_bg: Image.Image, right_draw: ImageDrawType, vive: List[Vive]
-    ):
+    def draw_vive_section(right_bg: Image.Image, right_draw: ImageDrawType, vive: List[Vive]):
         """绘制射击数据部分"""
         if vive is None:
             return
@@ -207,9 +187,7 @@ class DrawUtils:
         positions = [(370, 45), (370, 120), (370, 195)]
 
         for data, pos in zip(shooting_data[:3], positions):
-            right_draw.text(
-                pos, data["content"], (255, 255, 255, 255), va_font_30, "mm"
-            )
+            right_draw.text(pos, data["content"], (255, 255, 255, 255), va_font_30, "mm")
             right_draw.text(
                 (pos[0] + 280, pos[1]),
                 data["sub_content"],
@@ -239,21 +217,17 @@ class DrawUtils:
             if battle["score_level"].get("level", "").strip():
                 icon_key_map: Dict[
                     str,
-                    Literal[
-                        "head_icon_win", "head_icon_fail", "head_icon_draw"
-                    ],
+                    Literal["head_icon_win", "head_icon_fail", "head_icon_draw"],
                 ] = {
                     "胜利": "head_icon_win",
                     "失败": "head_icon_fail",
                     "平局": "head_icon_draw",
                 }
-                icon_key: Literal[
-                    "head_icon_win", "head_icon_fail", "head_icon_draw"
-                ] = icon_key_map.get(battle["result_title"], "head_icon_draw")
+                icon_key: Literal["head_icon_win", "head_icon_fail", "head_icon_draw"] = icon_key_map.get(
+                    battle["result_title"], "head_icon_draw"
+                )
                 if icon_key in battle["score_level"]:
-                    image_tasks.append(
-                        save_img(battle["score_level"][icon_key], "rank")
-                    )
+                    image_tasks.append(save_img(battle["score_level"][icon_key], "rank"))
             if battle.get("achievement"):
                 for ach in battle["achievement"]:
                     image_tasks.append(save_img(ach["icon"], "icon"))
@@ -269,9 +243,7 @@ class DrawUtils:
                 "胜利": ("win", "green_head.png"),
                 "失败": ("fail", "red_head.png"),
             }
-            result, head_file = result_map.get(
-                one_valcard["result_title"], ("draw", "grey_head.png")
-            )
+            result, head_file = result_map.get(one_valcard["result_title"], ("draw", "grey_head.png"))
 
             head2_bg = get_cached_texture(head_file)
             result_color = one_valcard["result_color"]
@@ -318,9 +290,7 @@ class DrawUtils:
                 "white",
                 va_font_42,
             )
-            battle_draw.text(
-                (120, 80), one_valcard["content"], "white", va_font_30
-            )
+            battle_draw.text((120, 80), one_valcard["content"], "white", va_font_30)
             battle_draw.text(
                 (510 - len(one_valcard["kda"] * 5), 25),
                 one_valcard["kda"],
@@ -337,24 +307,18 @@ class DrawUtils:
                     radius=15,
                     fill=hex_to_rgba(score_color, alpha=255),
                 )
-                score_draw.text(
-                    (40, 20), one_valcard["score"], "white", va_font_20, "mm"
-                )
+                score_draw.text((40, 20), one_valcard["score"], "white", va_font_20, "mm")
                 easy_paste(battle_bg, score_bg, (610, 25), "lt")
 
             if one_valcard["is_friend"] == 1:
                 friend_img = get_cached_texture("friend.png")
                 easy_paste(battle_bg, friend_img, (485, 80), "lt")
 
-            battle_draw.text(
-                (520, 80), one_valcard["time"], "white", va_font_20
-            )
+            battle_draw.text((520, 80), one_valcard["time"], "white", va_font_20)
 
             if one_valcard.get("achievement"):
                 x = 360
-                for ach_idx, ach in enumerate(
-                    one_valcard["achievement"], start=1
-                ):
+                for ach_idx, ach in enumerate(one_valcard["achievement"], start=1):
                     ach_bg = loaded_images[img_idx]
                     img_idx += 1
                     easy_paste(battle_bg, ach_bg, (x, 22), "lt")
@@ -366,28 +330,33 @@ class DrawUtils:
     def draw_hexagonal_panel(
         proportion_array: List[float],
         image: Image.Image,
-        fill_color: Tuple[int, int, int, int] = (255, 255, 255, 0),
+        fill_color: Optional[Tuple[int, int, int, int]] = (255, 255, 255, 100),
+        outline_color: Optional[Tuple[int, int, int, int]] = (0, 0, 0, 255),
     ):
-        """绘制六边形面板"""
+        """绘制六边形面板
+
+        Args:
+            proportion_array: 数据数组（6 个数值，从上方开始逆时针：上，左上，左下，下，右下，右上）
+            image: 要绘制的图片
+            fill_color: 填充颜色，None 表示无填充
+            outline_color: 边框颜色，None 表示无边框
+        """
         width, height = image.size
         draw = ImageDraw.Draw(image)
         center_x, center_y = width // 2 + 20, height // 2 - 50
 
-        # 预计算六边形顶点
+        # 预计算六边形顶点（从上方开始逆时针：上，左上，左下，下，右下，右上）
+        # 角度：270°, 210°, 150°, 90°, 30°, 330°
         hexagon_points = [
             (
-                center_x
-                + (proportion_array[i] / 100 * 200)
-                * math.cos(math.pi / 3 * i + math.pi / 2),
-                center_y
-                + (proportion_array[i] / 100 * 200)
-                * math.sin(math.pi / 3 * i + math.pi / 2),
+                center_x + (proportion_array[i] / 100 * 200) * math.cos(-math.pi / 2 - math.pi / 3 * i),
+                center_y + (proportion_array[i] / 100 * 200) * math.sin(-math.pi / 2 - math.pi / 3 * i),
             )
             for i in range(6)
         ]
 
         # 绘制六边形
-        draw.polygon(hexagon_points, fill=fill_color, outline=(0, 0, 0))
+        draw.polygon(hexagon_points, fill=fill_color, outline=outline_color)
 
 
 @lru_cache(maxsize=256)

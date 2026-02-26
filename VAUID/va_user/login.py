@@ -36,9 +36,7 @@ async def exchange_val_token(openid: str, access_token: str) -> Optional[Dict]:
 
     async with aiohttp.ClientSession() as session:
         try:
-            async with session.post(
-                MVAL_API, json=payload, headers=headers
-            ) as resp:
+            async with session.post(MVAL_API, json=payload, headers=headers) as resp:
                 res_json = await resp.json()
                 if res_json.get("result") == 0:
                     data = res_json.get("data", {}).get("login_info", {})

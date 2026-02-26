@@ -1,11 +1,11 @@
+import math
 import asyncio
 from typing import List, Union, Optional
 
 from PIL import Image, ImageDraw
 
 from gsuid_core.logger import logger
-
-# from gsuid_core.logger import logger
+from gsuid_core.models import Event
 from gsuid_core.utils.image.convert import convert_img
 from gsuid_core.utils.image.image_tools import easy_paste, draw_pic_with_ring
 
@@ -24,9 +24,12 @@ from ..utils.api.models import (
 from ..utils.error_reply import get_error
 
 
-async def get_va_info_img(uid: str) -> Union[str, bytes]:
+async def get_va_info_img(ev: Event, uid: str) -> Union[str, bytes]:
+    # 创建查询上下文 - 使用查询人自身的 cookie
+    ctx = await va_api.create_context(ev)
+
     # 基础信息
-    detail = await va_api.get_player_info(uid)
+    detail = await va_api.get_player_info(ctx, [uid])
 
     if isinstance(detail, (int, str)):
         return get_error(detail) if isinstance(detail, int) else detail
@@ -40,13 +43,14 @@ async def get_va_info_img(uid: str) -> Union[str, bytes]:
         return card
 
     scene = card["role_info"]["friend_scene"]
-    # 并发请求所有数据
+
+    # 并发请求所有数据，使用查询上下文中的 cookie
     results = await asyncio.gather(
-        va_api.get_detail_card(scene),
-        va_api.get_online(uid, sence),
-        va_api.get_gun(uid, scene),
-        va_api.get_pf(uid, scene),
-        va_api.get_vive(uid, scene),
+        va_api.get_detail_card(uid, scene, ctx.cookie, ctx.get_random_cookie),
+        va_api.get_online(uid, sence, ctx.cookie, ctx.get_random_cookie),
+        va_api.get_gun(uid, scene, ctx.cookie, ctx.get_random_cookie),
+        va_api.get_pf(uid, scene, ctx.cookie, ctx.get_random_cookie),
+        va_api.get_vive(uid, scene, ctx.cookie, ctx.get_random_cookie),
         return_exceptions=True,
     )
 
@@ -60,9 +64,7 @@ async def get_va_info_img(uid: str) -> Union[str, bytes]:
 
     online: Optional[CardOnline] = None
     if isinstance(online_raw, (int, BaseException)):
-        logger.error(
-            f"online error: {get_error(online_raw) if isinstance(online_raw, int) else online_raw}"
-        )
+        logger.error(f"online error: {get_error(online_raw) if isinstance(online_raw, int) else online_raw}")
     else:
         online = online_raw
 
@@ -82,7 +84,7 @@ async def get_va_info_img(uid: str) -> Union[str, bytes]:
 
     if isinstance(vive_raw, BaseException):
         logger.error(f"vive error: {vive_raw}")
-        return "获取vive数据失败"
+        return "获取 vive 数据失败"
     if isinstance(vive_raw, int):
         return get_error(vive_raw)
     vive: List[Vive] = vive_raw
@@ -93,9 +95,7 @@ async def get_va_info_img(uid: str) -> Union[str, bytes]:
     if len(detail) == 0:
         return "报错了，检查控制台"
 
-    return await draw_va_info_img(
-        detail, card, cardetail, online, gun, hero, vive
-    )
+    return await draw_va_info_img(detail, card, cardetail, online, gun, hero, vive)
 
 
 async def draw_va_info_img(
@@ -108,7 +108,7 @@ async def draw_va_info_img(
     vive: List[Vive],
 ) -> bytes | str:
     if not card:
-        return "token已过期"
+        return "token 已过期"
 
     card_info = card["card"]
     try:
@@ -149,9 +149,7 @@ async def draw_va_info_img(
 
     # 在线状态
     if online is not None and online.get("online_text"):
-        online_filename = (
-            "online.png" if "在线" in online["online_text"] else "offline.png"
-        )
+        online_filename = "online.png" if "在线" in online["online_text"] else "offline.png"
         online_img = get_cached_texture(f"online/{online_filename}")
         easy_paste(img, online_img, (180, 190), direction="cc")
 
@@ -160,15 +158,9 @@ async def draw_va_info_img(
     easy_paste(img, line2, (220, 68))
 
     # 文字信息
-    img_draw.text(
-        (240, 60), detail["nickName"], (255, 255, 255, 255), va_font_42
-    )
-    img_draw.text(
-        (240, 120), card_info["name"], (200, 200, 200, 255), va_font_30
-    )
-    img_draw.text(
-        (240, 160), f"UID {detail['appNum']}", (200, 200, 200, 255), va_font_20
-    )
+    img_draw.text((240, 60), detail["nickName"], (255, 255, 255, 255), va_font_42)
+    img_draw.text((240, 120), card_info["name"], (200, 200, 200, 255), va_font_30)
+    img_draw.text((240, 160), f"UID {detail['appNum']}", (200, 200, 200, 255), va_font_20)
 
     # === 综合信息 ===
     rank_bg = images["bg"]
@@ -179,9 +171,7 @@ async def draw_va_info_img(
     # 使用辅助函数绘制文本，减少重复代码
     def draw_stat(x: int, y: int, value: str, label: str):
         rank_draw.text((x, y), value, (255, 255, 255, 255), va_font_42, "mm")
-        rank_draw.text(
-            (x, y + 40), label, (255, 255, 255, 255), va_font_20, "mm"
-        )
+        rank_draw.text((x, y + 40), label, (255, 255, 255, 255), va_font_20, "mm")
 
     # 左侧信息
     rank_draw.text(
@@ -194,27 +184,17 @@ async def draw_va_info_img(
     easy_paste(rank_bg, images["rank"].resize((80, 80)), (100, 100), "cc")
 
     draw_stat(100, 260, f"Lv{detail['gameInfoList'][0]['level']}", "游戏等级")
-    draw_stat(
-        100, 390, card_info["left_data"]["list"][1]["content"], "游戏时长"
-    )
+    draw_stat(100, 390, card_info["left_data"]["list"][1]["content"], "游戏时长")
     draw_stat(100, 520, card_info["left_data"]["list"][2]["content"], "ACS")
     draw_stat(280, 520, card_info["middle_data"]["content"], "KAST")
     draw_stat(460, 520, card_info["round_win_rate"]["content"], "回合胜率")
-    draw_stat(
-        640, 520, card_info["right_data"]["list"][2]["content"], "赛季精准击败"
-    )
-    draw_stat(
-        640, 390, card_info["right_data"]["list"][1]["content"], "赛季胜率"
-    )
-    draw_stat(
-        640, 260, card_info["right_data"]["list"][0]["content"], "赛季KDA"
-    )
+    draw_stat(640, 520, card_info["right_data"]["list"][2]["content"], "赛季精准击败")
+    draw_stat(640, 390, card_info["right_data"]["list"][1]["content"], "赛季胜率")
+    draw_stat(640, 260, card_info["right_data"]["list"][0]["content"], "赛季 KDA")
 
     # 最佳武器
     easy_paste(rank_bg, images["weapon"].resize((150, 82)), (640, 100), "cc")
-    rank_draw.text(
-        (640, 170), "最佳武器", (255, 255, 255, 255), va_font_20, "mm"
-    )
+    rank_draw.text((640, 170), "最佳武器", (255, 255, 255, 255), va_font_20, "mm")
 
     img.paste(rank_bg, (0, 180), rank_bg)
 
@@ -234,35 +214,57 @@ async def draw_va_info_img(
     six_info = vive[1]["body"]["radar_chart"]["tabs"][0]
     p_six_info = vive[1]["body"]["radar_chart"]["player_dict"]
 
+    # 调试：打印两组数据
+    logger.info(f"标准值 proportion_array: {six_info['proportion_array']}")
+    logger.info(f"玩家值 proportion_array: {p_six_info['proportion_array']}")
+
     base_image = get_cached_texture("six_bg.png")
 
-    # 绘制六边形
+    # 1. 先绘制标准六边形（灰色细线，作为背景基准）
     DrawUtils.draw_hexagonal_panel(
         [float(x) for x in six_info["proportion_array"]],
         base_image,
-        fill_color=(255, 255, 255, 100),
+        fill_color=None,
+        outline_color=(150, 150, 150, 200),  # 灰色，半透明
     )
 
-    # 绘制数据标签
+    # 2. 再绘制玩家六边形（蓝色填充 + 蓝色边框，突出显示）
+    DrawUtils.draw_hexagonal_panel(
+        [float(x) for x in p_six_info["proportion_array"]],
+        base_image,
+        fill_color=(100, 149, 237, 180),  # 半透明蓝色填充
+        outline_color=(65, 105, 225, 255),  # 蓝色边框
+    )
+
+    # 绘制数据标签 - 固定位置，向外偏离中心 20 像素
+    # 数据数组顺序：从上方开始逆时针 - 上，左上，左下，下，右下，右上
     draw_base = ImageDraw.Draw(base_image)
-    data_positions = [
-        (365, 88),
-        (135, 210),
-        (135, 392),
-        (365, 480),
-        (590, 392),
-        (590, 210),
-    ]
-    for pos, (six_val, p_six_val) in zip(
-        data_positions, zip(six_info["data_array"], p_six_info["data_array"])
-    ):
-        draw_base.text(
-            pos, f"{p_six_val} | {six_val}", "white", va_font_20, "mm"
-        )
-
-    draw_base.text(
-        (465, 628), six_info["sub_tab_name"], "white", va_font_30, "mm"
+    center_x, center_y = (
+        base_image.size[0] // 2 + 20,
+        base_image.size[1] // 2 - 50,
     )
+
+    # 标签位置（按数据顺序：上，左上，左下，下，右下，右上）
+    data_positions = [
+        (365, 88),  # 上方
+        (135, 210),  # 左上
+        (135, 392),  # 左下
+        (365, 480),  # 下方
+        (590, 392),  # 右下
+        (590, 210),  # 右上
+    ]
+
+    for pos, (six_val, p_six_val) in zip(data_positions, zip(six_info["data_array"], p_six_info["data_array"])):
+        # 计算从中心到标签位置的方向向量
+        dx = pos[0] - center_x
+        dy = pos[1] - center_y
+        distance = math.sqrt(dx**2 + dy**2)
+        # 向外移动 20 像素
+        new_x = pos[0] + (dx / distance) * 20
+        new_y = pos[1] + (dy / distance) * 20
+        draw_base.text((new_x, new_y), f"{p_six_val} | {six_val}", "white", va_font_20, "mm")
+
+    draw_base.text((465, 628), six_info["sub_tab_name"], "white", va_font_30, "mm")
 
     easy_paste(img, base_image, (750, 50))
 
