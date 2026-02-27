@@ -19,15 +19,13 @@ T_ValUser = TypeVar("T_ValUser", bound="ValUser")
 class ValBind(Bind):
     uid: Optional[str] = Field(default=None, title="VAUID")
 
-    class Config:
-        table = True
+    model_config = {"table": True}  # type: ignore
 
 
 class ValUser(User):
     uid: Optional[str] = Field(default=None, title="VAUID")
 
-    class Config:
-        table = True
+    model_config = {"table": True}  # type: ignore
 
     @classmethod
     @with_session

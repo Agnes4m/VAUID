@@ -1,6 +1,7 @@
 import json as js
 import time
 from typing import Any, Dict, List, Union, Literal, Callable, Optional, cast
+from dataclasses import field, dataclass
 
 from httpx import AsyncClient
 
@@ -39,44 +40,45 @@ SEASON_ID = "dcde7346-4085-de4f-c463-2489ed47983b"
 DEFAULT_TIMEOUT = 300
 
 
-class ValQueryContext:
-    """实例化"""
+@dataclass
+class ApiRequest:
+    """API 请求配置"""
 
-    def __init__(self, user_id: str, bot_id: str):
-        self.user_id = user_id
-        self.bot_id = bot_id
-        self._opuid: Optional[str] = None
-        self._cookie: Optional[str] = None
-        self._random_cookie: Optional[str] = None
+    url: str
+    method: Literal["GET", "POST"] = "GET"
+    params: Optional[Dict[str, Any]] = None
+    json: Optional[Dict[str, Any]] = None
+    need_cookie: bool = True
+
+
+@dataclass
+class QueryContext:
+    """查询上下文 - 简化版"""
+
+    user_id: str
+    bot_id: str
+    cookie: Optional[str] = None
+    opuid: Optional[str] = None
+    _random_cookie: Optional[str] = field(default=None, repr=False)
 
     async def init(self):
-        """初始化，获取查询者的 Cookie"""
+        """初始化上下文"""
         opuid, ck = await WeGameApi._get_cookie_by_id(self.user_id, self.bot_id)
-        self._opuid = opuid
-        self._cookie = ck
+        self.opuid = opuid
+        self.cookie = ck
         return self
 
-    @property
-    def opuid(self) -> Optional[str]:
-        """获取操作者 UUID"""
-        return self._opuid
-
-    @property
-    def cookie(self) -> Optional[str]:
-        """获取查询者 Cookie"""
-        return self._cookie
-
     async def get_random_cookie(self) -> Optional[str]:
-        """获取随机用户 Cookie（用于备用）"""
+        """获取随机 cookie（带缓存）"""
         if self._random_cookie is None:
             _, self._random_cookie = await WeGameApi.get_sence()
         return self._random_cookie
 
 
 class WeGameApi:
-    """WeGame API 客户端，用于获取无畏契约玩家数据"""
+    """WeGame API 客户端"""
 
-    ssl_verify = False
+    ssl_verify: bool = False
     _HEADER: Dict[str, str] = {
         "User-Agent": (
             "mval/1.4.1.10011 Channel/3"
@@ -87,18 +89,21 @@ class WeGameApi:
         "Content-Type": "application/json; charset=utf-8",
     }
 
+    # ========== 上下文管理 ==========
+
     @classmethod
-    async def create_context(cls, ev: Event) -> ValQueryContext:
+    async def create_context(cls, ev: Event) -> QueryContext:
         """创建查询上下文"""
-        # 确保 bot_id 是字符串
         bot_id = ev.bot_id[0] if isinstance(ev.bot_id, list) else ev.bot_id
-        ctx = ValQueryContext(ev.user_id, bot_id)
-        await ctx.init()
+        ctx = QueryContext(ev.user_id, bot_id)
+        _ = await ctx.init()
         return ctx
+
+    # ========== Cookie 管理 ==========
 
     @staticmethod
     async def _get_cookie(uid: str) -> List[str]:
-        """通过 uid 获取用户 token"""
+        """通过 uid 获取 cookie"""
         cookie = await ValUser.get_user_cookie_by_uid(uid)
         if cookie is None:
             raise Exception("No valid cookie")
@@ -106,138 +111,29 @@ class WeGameApi:
 
     @staticmethod
     async def _get_cookie_by_id(user_id: str, bot_id: str) -> List[str]:
-        """通过 user_id 获取 token"""
+        """通过 user_id 获取 cookie"""
         data = await ValUser.select_data(user_id, bot_id)
         if data is None:
             raise Exception("No valid uid")
-        return [data.uid, data.cookie] if data.cookie else ["", ""]
+        return [data.uid or "", data.cookie] if data.cookie else ["", ""]
 
     @staticmethod
     async def get_sence() -> List[str]:
-        """随机获取一个用户的 uid, token, stoken"""
+        """获取随机用户 cookie"""
         user_list = await ValUser.get_all_user()
         if not user_list:
-            return ["", "", ""]
+            return ["", ""]
 
-        user = user_list[0]
+        user = cast(ValUser, user_list[0])
         if user.uid is None:
             raise Exception("No valid uid")
 
-        token = await ValUser.get_user_cookie_by_uid(user.uid)
-        stoken = await ValUser.get_user_stoken_by_uid(user.uid)
-        if stoken is None or token is None:
+        cookie = await ValUser.get_user_cookie_by_uid(user.uid)
+        if cookie is None:
             raise Exception("No valid cookie")
-        return [user.uid, token, stoken]
+        return [user.uid, cookie]
 
-    async def search_player(self, key_word: str):
-        """使用名称来搜索玩家，可以获取 uid"""
-        data = await self._va_request(
-            SearchAPI,
-            params={
-                "keyWord": key_word,
-                "app_scope": "lol",
-                "searchType": "1",
-                "page": "0",
-                "pageSize": "10",
-            },
-        )
-        if isinstance(data, int):
-            return data
-        return cast(List[InfoBody], data["data"]["userList"])
-
-    async def get_player_info(self, ctx: ValQueryContext, uid_list: List[str]):
-        """使用 uid 来获取玩家信息，可以获取 scene
-
-        Args:
-            ctx: 查询上下文（包含查询者信息）
-            uid_list: 要查询的 UID 列表
-        """
-        if len(uid_list) < 1 or not ctx.cookie:
-            return None
-
-        uuidSceneList = [{"uuid": uid, "scene": ""} for uid in uid_list]
-
-        data = await self._va_request(
-            SummonerAPI,
-            headers={"Cookie": ctx.cookie},
-            json={
-                "opUuid": ctx.opuid,
-                "isNeedGameInfo": 1,
-                "isNeedMedal": 0,
-                "isNeedCommunityInfo": 1,
-                "clientType": 9,
-                "isNeedDress": 1,
-                "isNeedRemark": 1,
-                "uuidSceneList": uuidSceneList,
-            },
-        )
-        if isinstance(data, int):
-            return data
-        if data.get("msg") != "success":
-            logger.error(f"获取卡片信息失败：{data}")
-            return cast(str, data.get("data", ""))
-        return cast(SummonerInfo, data["data"][0])
-
-    async def get_player_card(self, uid: str):
-        """获取玩家卡片信息，可以获取 scene"""
-        uid, ck = await self._get_cookie(uid)
-        data = await self._va_request(
-            CardAPI,
-            headers={"Cookie": ck},
-            json={"uuid": uid, "jump_key": "mine"},
-        )
-
-        return self._parse_response(data, lambda d: cast(CardInfo, d["data"]), default_on_error="")
-
-    async def get_detail_card(
-        self,
-        uid: str,
-        secen: str,
-        cookie: Optional[str] = None,
-        get_random_cookie: Optional[Callable[[], Any]] = None,
-    ):
-        """用 scene 获取玩家卡片信息
-
-        Args:
-            uid: 目标用户 UID（用于获取备用 cookie）
-            secen: 场景 ID
-            cookie: 可选的 cookie，优先使用此 cookie，失败后使用随机 cookie
-            get_random_cookie: 获取随机 cookie 的异步方法
-        """
-        json_data = {"scene": secen}
-
-        # 优先使用提供的 cookie
-        if cookie:
-            data = await self._va_request(ValCardAPI, headers={"Cookie": cookie}, json=json_data)
-            result = self._parse_response(
-                data, lambda d: cast(List[Battle], d["data"]["battle_list"]), default_on_error=""
-            )
-            if not isinstance(result, int) or result >= 0:
-                return result
-            logger.debug(f"使用用户 cookie 请求失败，尝试使用随机 cookie: {result}")
-
-        # 使用随机 cookie 重试
-        if get_random_cookie:
-            random_ck = await get_random_cookie()
-        else:
-            _, random_ck = await WeGameApi.get_sence()
-        if not random_ck:
-            return -511
-        data = await self._va_request(ValCardAPI, headers={"Cookie": random_ck}, json=json_data)
-        return self._parse_response(data, lambda d: cast(List[Battle], d["data"]["battle_list"]), default_on_error="")
-
-    def _parse_response(
-        self,
-        data: Union[Dict, int],
-        parser: Optional[Callable[[Dict], Any]] = None,
-        default_on_error: Any = "",
-    ) -> Union[Any, int]:
-        """统一处理 API 响应"""
-        if isinstance(data, int):
-            return data
-        if data.get("result", 0) != 0:
-            return default_on_error
-        return parser(data) if parser else data
+    # ========== 基础请求方法 ==========
 
     async def _va_request(
         self,
@@ -246,26 +142,13 @@ class WeGameApi:
         headers: Optional[Dict[str, str]] = None,
         params: Optional[Dict[str, Any]] = None,
         json: Optional[Dict[str, Any]] = None,
-        need_ck: bool = True,
     ) -> Union[Dict, int]:
         """统一的 API 请求方法"""
-        # 构建请求头
         req_headers = dict(self._HEADER)
         if headers:
-            # 统一使用首字母大写的键
             headers = {k.capitalize() if k.lower() == "cookie" else k: v for k, v in headers.items()}
             req_headers.update(headers)
 
-        # 自动添加 cookie
-        if need_ck and "Cookie" not in req_headers and "cookie" not in req_headers:
-            uid = json.get("id", "9999") if json else "9999"
-            _, ck = await WeGameApi._get_cookie(uid)
-            if ck:
-                req_headers["Cookie"] = ck
-            else:
-                return -511
-
-        # 有 json 数据时使用 POST 方法
         if json:
             method = "POST"
 
@@ -288,7 +171,6 @@ class WeGameApi:
                     logger.error(f"API 响应解析失败：{_raw_data}")
                     return -999
 
-            # 处理错误码
             if "result" in raw_data:
                 result = raw_data["result"]
                 if isinstance(result, dict) and result.get("error_code", 0) != 0:
@@ -298,259 +180,219 @@ class WeGameApi:
 
             return raw_data
 
-    async def _get_with_token(
+    def _parse_response(
         self,
-        uid: str,
-        scene: str,
-        api_url: str,
-        parser: Callable[[Dict], Any],
-        extra_data: Optional[Dict[str, Any]] = None,
-        cookie: Optional[str] = None,
-        get_random_cookie: Optional[Callable[[], Any]] = None,
+        data: Union[Dict, int],
+        parser: Optional[Callable[[Dict], Any]] = None,
+        default_on_error: Any = "",
     ) -> Union[Any, int]:
-        """通用的带 token 请求方法，用于获取各种玩家数据
+        """统一处理 API 响应"""
+        if isinstance(data, int):
+            return data
+        if data.get("result", 0) != 0:
+            return default_on_error
+        return parser(data) if parser else data
+
+    async def _request_with_fallback(
+        self,
+        request: ApiRequest,
+        parser: Callable[[Dict], Any],
+        cookie: Optional[str] = None,
+        random_cookie: Optional[str] = None,
+    ) -> Union[Any, int]:
+        """带 cookie 回退机制的请求方法
 
         Args:
-            uid: 目标用户 UID
-            scene: 场景 ID
-            api_url: API URL
+            request: API 请求配置
             parser: 数据解析函数
-            extra_data: 额外的请求数据
-            cookie: 可选的 cookie，优先使用此 cookie，失败后使用随机 cookie
-            get_random_cookie: 获取随机 cookie 的异步方法
+            cookie: 优先使用的 cookie
+            random_cookie: 备用 cookie
         """
-        json_data = {"scene": scene, **(extra_data or {})}
-
-        # 优先使用提供的 cookie
+        # 使用优先 cookie 请求
         if cookie:
-            data = await self._va_request(
-                api_url,
-                headers={"Cookie": cookie},
-                json=json_data,
-            )
+            data = await self._va_request(request.url, request.method, {"Cookie": cookie}, request.params, request.json)
             result = self._parse_response(data, parser, default_on_error="")
-            # logger.debug(f"使用用户 cookie 请求 {api_url} 成功: {result}")
-            # 如果不是错误码，直接返回
             if not isinstance(result, int) or result >= 0:
                 return result
-            logger.debug(f"使用用户 cookie 请求失败，尝试使用随机 cookie: {result}")
 
-        # 使用随机 cookie 重试
-        if get_random_cookie:
-            random_ck = await get_random_cookie()
-        else:
-            _, random_ck = await WeGameApi.get_sence()
-        if not random_ck:
+        # 使用备用 cookie 重试
+        if not random_cookie:
+            _, random_cookie = await self.get_sence()
+        if not random_cookie:
             return -511
+
         data = await self._va_request(
-            api_url,
-            headers={"Cookie": random_ck},
-            json=json_data,
+            request.url, request.method, {"Cookie": random_cookie}, request.params, request.json
         )
         return self._parse_response(data, parser, default_on_error="")
 
+    # ========== 公开 API 方法 ==========
+
+    async def search_player(self, key_word: str) -> Union[List[InfoBody], int]:
+        """搜索玩家"""
+        data = await self._va_request(
+            SearchAPI,
+            params={
+                "keyWord": key_word,
+                "app_scope": "lol",
+                "searchType": "1",
+                "page": "0",
+                "pageSize": "10",
+            },
+        )
+        if isinstance(data, int):
+            return data
+        return cast(List[InfoBody], data["data"]["userList"])
+
+    async def get_player_info(self, ctx: QueryContext, uid_list: List[str]) -> Union[SummonerInfo, int, str, None]:
+        """获取玩家信息"""
+        if len(uid_list) < 1 or not ctx.cookie:
+            return None
+
+        uuidSceneList = [{"uuid": uid, "scene": ""} for uid in uid_list]
+        data = await self._va_request(
+            SummonerAPI,
+            headers={"Cookie": ctx.cookie},
+            json={
+                "opUuid": ctx.opuid,
+                "isNeedGameInfo": 1,
+                "isNeedMedal": 0,
+                "isNeedCommunityInfo": 1,
+                "clientType": 9,
+                "isNeedDress": 1,
+                "isNeedRemark": 1,
+                "uuidSceneList": uuidSceneList,
+            },
+        )
+        if isinstance(data, int):
+            return data
+        if data.get("msg") != "success":
+            logger.error(f"获取卡片信息失败：{data}")
+            return cast(str, data.get("data", ""))
+        return cast(SummonerInfo, data["data"][0])
+
+    async def get_player_card(self, uid: str) -> Union[CardInfo, int, str]:
+        """获取玩家卡片"""
+        uid, ck = await self._get_cookie(uid)
+        data = await self._va_request(CardAPI, headers={"Cookie": ck}, json={"uuid": uid, "jump_key": "mine"})
+        return self._parse_response(data, lambda d: cast(CardInfo, d["data"]), default_on_error="")
+
+    async def get_detail_card(
+        self, scene: str, cookie: Optional[str] = None, random_cookie: Optional[str] = None
+    ) -> Union[List[Battle], int]:
+        """获取详细卡片"""
+        request = ApiRequest(url=ValCardAPI, json={"scene": scene})
+        return await self._request_with_fallback(
+            request,
+            lambda d: cast(List[Battle], d["data"]["battle_list"]),
+            cookie,
+            random_cookie,
+        )
+
     async def get_online(
-        self,
-        uid: str,
-        scene: str,
-        cookie: Optional[str] = None,
-        get_random_cookie: Optional[Callable[[], Any]] = None,
-    ):
-        """获取玩家在线信息
-
-        Args:
-            uid: 目标用户 UID
-            scene: 场景 ID
-            cookie: 可选的 cookie，优先使用此 cookie，失败后使用随机 cookie
-            get_random_cookie: 获取随机 cookie 的异步方法
-        """
-        json_data = {"uuid": uid, "scene": scene}
-
-        # 优先使用提供的 cookie
-        if cookie:
-            data = await self._va_request(OnlineAPI, headers={"Cookie": cookie}, json=json_data)
-            result = self._parse_response(data, lambda d: cast(CardOnline, d["data"]), default_on_error="")
-            if not isinstance(result, int) or result >= 0:
-                return result
-            logger.debug(f"使用用户 cookie 请求失败，尝试使用随机 cookie: {result}")
-
-        # 使用随机 cookie 重试
-        if get_random_cookie:
-            random_ck = await get_random_cookie()
-        else:
-            _, random_ck = await WeGameApi.get_sence()
-        if not random_ck:
-            return -511
-        data = await self._va_request(OnlineAPI, headers={"Cookie": random_ck}, json=json_data)
-        return self._parse_response(data, lambda d: cast(CardOnline, d["data"]), default_on_error="")
+        self, uid: str, scene: str, cookie: Optional[str] = None, random_cookie: Optional[str] = None
+    ) -> Union[CardOnline, int]:
+        """获取在线信息"""
+        request = ApiRequest(url=OnlineAPI, json={"uuid": uid, "scene": scene})
+        return await self._request_with_fallback(
+            request,
+            lambda d: cast(CardOnline, d["data"]),
+            cookie,
+            random_cookie,
+        )
 
     async def get_gun(
-        self,
-        uid: str,
-        scene: str,
-        cookie: Optional[str] = None,
-        get_random_cookie: Optional[Callable[[], Any]] = None,
-    ):
-        """获取玩家枪械信息
-
-        Args:
-            uid: 目标用户 UID
-            scene: 场景 ID
-            cookie: 可选的 cookie，优先使用此 cookie，失败后使用随机 cookie
-        """
-        return await self._get_with_token(
-            uid,
-            scene,
-            GunAPI,
+        self, uid: str, scene: str, cookie: Optional[str] = None, random_cookie: Optional[str] = None
+    ) -> Union[List[GunInfo], int]:
+        """获取枪械信息"""
+        request = ApiRequest(
+            url=GunAPI,
+            json={"scene": scene, "season_id": SEASON_ID, "queue_id": "255"},
+        )
+        return await self._request_with_fallback(
+            request,
             lambda d: cast(List[GunInfo], d["data"]["list"]),
-            {"season_id": SEASON_ID, "queue_id": "255"},
             cookie,
-            get_random_cookie,
+            random_cookie,
         )
 
     async def get_map(
-        self,
-        uid: str,
-        scene: str,
-        cookie: Optional[str] = None,
-        get_random_cookie: Optional[Callable[[], Any]] = None,
-    ):
-        """获取玩家地图信息
-
-        Args:
-            uid: 目标用户 UID
-            scene: 场景 ID
-            cookie: 可选的 cookie，优先使用此 cookie，失败后使用随机 cookie
-        """
-        return await self._get_with_token(
-            uid,
-            scene,
-            MapAPI,
+        self, uid: str, scene: str, cookie: Optional[str] = None, random_cookie: Optional[str] = None
+    ) -> Union[List[MapInfo], int]:
+        """获取地图信息"""
+        request = ApiRequest(
+            url=MapAPI,
+            json={"scene": scene, "season_id": SEASON_ID, "queue_id": "255"},
+        )
+        return await self._request_with_fallback(
+            request,
             lambda d: cast(List[MapInfo], d["data"]["list"]),
-            {"season_id": SEASON_ID, "queue_id": "255"},
             cookie,
-            get_random_cookie,
+            random_cookie,
         )
 
     async def get_vive(
-        self,
-        uid: str,
-        scene: str,
-        cookie: Optional[str] = None,
-        get_random_cookie: Optional[Callable[[], Any]] = None,
-    ):
-        """获取玩家 Vive 信息
-
-        Args:
-            uid: 目标用户 UID
-            scene: 场景 ID
-            cookie: 可选的 cookie，优先使用此 cookie，失败后使用随机 cookie
-        """
-        return await self._get_with_token(
-            uid,
-            scene,
-            ViveAPI,
+        self, uid: str, scene: str, cookie: Optional[str] = None, random_cookie: Optional[str] = None
+    ) -> Union[List[Vive], int]:
+        """获取 Vive 信息"""
+        request = ApiRequest(url=ViveAPI, json={"scene": scene})
+        return await self._request_with_fallback(
+            request,
             lambda d: cast(List[Vive], d["data"]["list"]),
-            cookie=cookie,
-            get_random_cookie=get_random_cookie,
+            cookie,
+            random_cookie,
         )
 
     async def get_pf(
-        self,
-        uid: str,
-        scene: str,
-        cookie: Optional[str] = None,
-        get_random_cookie: Optional[Callable[[], Any]] = None,
-    ):
-        """获取玩家 PF 信息
-
-        Args:
-            uid: 目标用户 UID
-            scene: 场景 ID
-            cookie: 可选的 cookie，优先使用此 cookie，失败后使用随机 cookie
-        """
-        return await self._get_with_token(
-            uid,
-            scene,
-            PFAPI,
+        self, uid: str, scene: str, cookie: Optional[str] = None, random_cookie: Optional[str] = None
+    ) -> Union[List[PFInfo], int]:
+        """获取 PF 信息"""
+        request = ApiRequest(
+            url=PFAPI,
+            json={"scene": scene, "season_id": SEASON_ID, "queue_id": "255"},
+        )
+        return await self._request_with_fallback(
+            request,
             lambda d: cast(List[PFInfo], d["data"]["list"]),
-            {"season_id": SEASON_ID, "queue_id": "255"},
             cookie,
-            get_random_cookie,
+            random_cookie,
         )
 
     async def get_shop(
-        self,
-        uid: str,
-        scene: str,
-        cookie: Optional[str] = None,
-        get_random_cookie: Optional[Callable[[], Any]] = None,
-    ):
-        """获取玩家商店信息
-
-        Args:
-            uid: 目标用户 UID
-            scene: 场景 ID
-            cookie: 可选的 cookie，优先使用此 cookie，失败后使用随机 cookie
-        """
-        json_data = {
-            "_t": int(time.time()),
-            "scene": scene,
-            "source_game_zone": "agame",
-            "game_zone": "agame",
-        }
-
-        # 优先使用提供的 cookie
-        if cookie:
-            data = await self._va_request(ShopAPI, headers={"Cookie": cookie}, json=json_data)
-            result = self._parse_response(data, lambda d: cast(List[Shop], d["data"]), default_on_error="")
-            if not isinstance(result, int) or result >= 0:
-                return result
-            logger.debug(f"使用用户 cookie 请求失败，尝试使用随机 cookie: {result}")
-
-        # 使用随机 cookie 重试
-        if get_random_cookie:
-            random_ck = await get_random_cookie()
-        else:
-            _, random_ck = await WeGameApi.get_sence()
-        if not random_ck:
-            return -511
-        data = await self._va_request(ShopAPI, headers={"Cookie": random_ck}, json=json_data)
-        return self._parse_response(data, lambda d: cast(List[Shop], d["data"]), default_on_error="")
+        self, uid: str, scene: str, cookie: Optional[str] = None, random_cookie: Optional[str] = None
+    ) -> Union[List[Shop], int]:
+        """获取商店信息"""
+        request = ApiRequest(
+            url=ShopAPI,
+            json={
+                "_t": int(time.time()),
+                "scene": scene,
+                "source_game_zone": "agame",
+                "game_zone": "agame",
+            },
+        )
+        return await self._request_with_fallback(
+            request,
+            lambda d: cast(List[Shop], d["data"]),
+            cookie,
+            random_cookie,
+        )
 
     async def get_asset(
-        self,
-        scene: str,
-        cookie: Optional[str] = None,
-        get_random_cookie: Optional[Callable[[], Any]] = None,
-    ) -> AssetData | int:
-        """获取玩家资产信息（皮肤、配件等）
-
-        Args:
-            scene: 场景 ID
-            cookie: 可选的 cookie，优先使用此 cookie，失败后使用随机 cookie
-            get_random_cookie: 获取随机 cookie 的异步方法
-        """
-        json_data = {
-            "scene": scene,
-            "source_game_zone": "agame",
-            "game_zone": "agame",
-        }
-
-        # 优先使用提供的 cookie
-        if cookie:
-            data = await self._va_request(AssetAPI, headers={"Cookie": cookie}, json=json_data)
-            result = self._parse_response(data, lambda d: cast(AssetData, d["data"]), default_on_error="")
-            if not isinstance(result, int) or result >= 0:
-                return result
-            logger.debug(f"使用用户 cookie 请求失败，尝试使用随机 cookie: {result}")
-
-        # 使用随机 cookie 重试
-        if get_random_cookie:
-            random_ck = await get_random_cookie()
-        else:
-            _, random_ck = await WeGameApi.get_sence()
-        if not random_ck:
-            return -511
-        data = await self._va_request(AssetAPI, headers={"Cookie": random_ck}, json=json_data)
-        return self._parse_response(data, lambda d: cast(AssetData, d["data"]), default_on_error="")
+        self, scene: str, cookie: Optional[str] = None, random_cookie: Optional[str] = None
+    ) -> Union[AssetData, int]:
+        """获取资产信息"""
+        request = ApiRequest(
+            url=AssetAPI,
+            json={
+                "scene": scene,
+                "source_game_zone": "agame",
+                "game_zone": "agame",
+            },
+        )
+        return await self._request_with_fallback(
+            request,
+            lambda d: cast(AssetData, d["data"]),
+            cookie,
+            random_cookie,
+        )

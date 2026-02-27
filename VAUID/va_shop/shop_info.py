@@ -15,11 +15,16 @@ from ..utils.error_reply import get_error
 
 
 async def get_va_shop_img(ev: Event, uid: str) -> Union[str, bytes]:
+    # 创建查询上下文
+    ctx = await va_api.create_context(ev)
+
     # 基础信息
-    detail = await va_api.get_player_info(ev.user_id, uid_list=[uid], bot_id=ev.bot_id)
+    detail = await va_api.get_player_info(ctx, [uid])
 
     if isinstance(detail, (int, str)):
         return get_error(detail) if isinstance(detail, int) else detail
+    if detail is None:
+        return "未查询到玩家信息"
 
     # sence = detail["gameInfoList"][0]["scene"]
 
@@ -36,7 +41,7 @@ async def get_va_shop_img(ev: Event, uid: str) -> Union[str, bytes]:
     if isinstance(shop_list, str):
         return shop_list
 
-    if len(detail) == 0:
+    if not detail.get("gameInfoList"):
         return "报错了，检查控制台"
 
     return await draw_va_shop_img(detail, shop_list)

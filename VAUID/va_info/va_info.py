@@ -38,6 +38,8 @@ async def get_va_info_img(ev: Event, uid: str) -> Union[str, bytes]:
 
     if isinstance(detail, (int, str)):
         return get_error(detail) if isinstance(detail, int) else detail
+    if detail is None:
+        return "未查询到玩家信息"
 
     sence = detail["gameInfoList"][0]["scene"]
 
@@ -49,13 +51,16 @@ async def get_va_info_img(ev: Event, uid: str) -> Union[str, bytes]:
 
     scene = card["role_info"]["friend_scene"]
 
-    # 并发请求所有数据，使用查询上下文中的 cookie
+    # 获取随机 cookie 备用
+    random_cookie = await ctx.get_random_cookie()
+
+    # 并发请求所有数据
     results = await asyncio.gather(
-        va_api.get_detail_card(uid, scene, ctx.cookie, ctx.get_random_cookie),
-        va_api.get_online(uid, sence, ctx.cookie, ctx.get_random_cookie),
-        va_api.get_gun(uid, scene, ctx.cookie, ctx.get_random_cookie),
-        va_api.get_pf(uid, scene, ctx.cookie, ctx.get_random_cookie),
-        va_api.get_vive(uid, scene, ctx.cookie, ctx.get_random_cookie),
+        va_api.get_detail_card(scene, ctx.cookie, random_cookie),
+        va_api.get_online(uid, sence, ctx.cookie, random_cookie),
+        va_api.get_gun(uid, scene, ctx.cookie, random_cookie),
+        va_api.get_pf(uid, scene, ctx.cookie, random_cookie),
+        va_api.get_vive(uid, scene, ctx.cookie, random_cookie),
         return_exceptions=True,
     )
 
@@ -97,7 +102,7 @@ async def get_va_info_img(ev: Event, uid: str) -> Union[str, bytes]:
     # seeson_id = card["role_info"]["session_id"]
     # logger.info(f"seeson_id: {seeson_id}")
 
-    if len(detail) == 0:
+    if not detail.get("gameInfoList"):
         return "报错了，检查控制台"
 
     return await draw_va_info_img(detail, card, cardetail, online, gun, hero, vive)
@@ -112,9 +117,6 @@ async def draw_va_info_img(
     hero: List[PFInfo],
     vive: List[Vive],
 ) -> bytes | str:
-    if not card:
-        return "token 已过期"
-
     card_info = card["card"]
     try:
         if (
@@ -334,7 +336,7 @@ async def draw_asset_section(
         return y_offset
 
     # 分类标题
-    img_draw.text((100, y_offset), section_name, (255, 255, 255, 255), va_font_30)
+    img_draw.text((100, y_offset + 100), section_name, (255, 255, 255, 255), va_font_30)
     y_offset += title_offset
 
     # 绘制物品
@@ -357,7 +359,7 @@ async def draw_asset_section(
 
         # 绘制物品名称
         item_name = item.get(name_key, "未知物品")
-        img_draw.text((x + 50, y + 90), item_name, (255, 255, 255, 255), va_font_20, "mm")
+        img_draw.text((x + 50, y + size[1] + 40), item_name, (255, 255, 255, 255), va_font_20, "mm")
 
     y_offset += section_bottom_offset
     return y_offset
@@ -384,21 +386,43 @@ async def get_va_asset_img(ev: Event, uid: str) -> Union[str, bytes]:
         return "未查询到玩家信息"
     scene = detail["gameInfoList"][0]["scene"]
 
+    # 获取随机 cookie 备用
+    random_cookie = await ctx.get_random_cookie()
+
     # 获取资产数据
-    asset_data = await va_api.get_asset(scene, ctx.cookie, ctx.get_random_cookie)
+    asset_data = await va_api.get_asset(scene, ctx.cookie, random_cookie)
     if isinstance(asset_data, int):
         return get_error(asset_data)
     if isinstance(asset_data, str):
         return asset_data
-    if not asset_data or not isinstance(asset_data, dict):
+    if not asset_data:
         return "未查询到资产数据"
+
+    # 并发加载所有需要的远程图片
+    image_tasks = {
+        "head": save_img(detail["headUrl"], "head"),
+    }
+    image_results = await asyncio.gather(*image_tasks.values())
+    images = dict(zip(image_tasks.keys(), image_results))
 
     # 创建画布
     img = Image.new("RGBA", (1200, 1600), (15, 25, 35, 255))
     img_draw = ImageDraw.Draw(img)
+    # === 头部信息 ===
+    head_img = await draw_pic_with_ring(
+        images["head"],
+        size=140,
+        is_ring=True,
+    )
+    easy_paste(img, head_img, (120, 120), direction="cc")
+    # 分割线
+    line2 = get_cached_texture("line2.png")
+    easy_paste(img, line2, (220, 68))
 
-    # 标题
-    img_draw.text((600, 30), f"UID {detail['nickName']} 的资产", (255, 255, 255, 255), va_font_42, "mm")
+    # 文字信息
+    img_draw.text((240, 60), detail["nickName"], (255, 255, 255, 255), va_font_42)
+    # img_draw.text((240, 120), detail["gameInfoList"][0][], (200, 200, 200, 255), va_font_30)
+    img_draw.text((240, 160), f"UID {detail['appNum']}", (200, 200, 200, 255), va_font_20)
 
     # 绘制各分类
     y_offset = 100
@@ -407,7 +431,7 @@ async def get_va_asset_img(ev: Event, uid: str) -> Union[str, bytes]:
     skin_data = asset_data.get("skin", {})
     if skin_data:
         y_offset = await draw_asset_section(
-            img, img_draw, skin_data, "皮肤", y_offset, icon_key="icon", name_key="name", size=(150, 80)
+            img, img_draw, skin_data, "皮肤", y_offset, icon_key="icon", name_key="name", size=(180, 80)
         )
 
     # 2. 英雄 (Agent)
@@ -435,7 +459,7 @@ async def get_va_asset_img(ev: Event, uid: str) -> Union[str, bytes]:
     charm_data = asset_data.get("charm", {})
     if charm_data:
         y_offset = await draw_asset_section(
-            img, img_draw, charm_data, "挂饰", y_offset, icon_key="icon", name_key="name"
+            img, img_draw, charm_data, "挂饰", y_offset + 50, icon_key="icon", name_key="name"
         )
 
     return await convert_img(img)

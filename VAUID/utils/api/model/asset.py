@@ -1,4 +1,4 @@
-from typing import Any, List, Union, Optional, TypedDict
+from typing import Any, List, Optional, TypedDict
 
 
 # --- 资金相关 (Money) ---
