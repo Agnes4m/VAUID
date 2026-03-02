@@ -52,7 +52,9 @@ async def on_valo_login(bot: Bot, ev: Event):
     LOGIN_URL = "https://xui.ptlogin2.qq.com/cgi-bin/xlogin?pt_enable_pwd=1&appid=716027609&pt_3rd_aid=102061775&daid=381&pt_skey_valid=0&style=35&force_qr=1&autorefresh=1&s_url=http%3A%2F%2Fconnect.qq.com&refer_cgi=m_authorize&ucheck=1&fall_to_wv=1&status_os=12&redirect_uri=auth%3A%2F%2Ftauth.qq.com%2F&client_id=102061775&pf=openmobile_android&response_type=token&scope=all&sdkp=a&sdkv=3.5.17.lite&sign=a6479455d3e49b597350f13f776a6288&status_machine=MjMxMTdSSzY2Qw%3D%3D&switch=1&time=1763280194&show_download_ui=true&h5sig=trobryxo8IPM0GaSQH12mowKG-CY65brFzkK7_-9EW4&loginty=6"
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"])
+        browser = await p.chromium.launch(
+            headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"]
+        )
         context = await browser.new_context(
             user_agent=(
                 "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) "
@@ -85,7 +87,9 @@ async def on_valo_login(bot: Bot, ev: Event):
                             login_temp_data["openid"] = openid
                             login_temp_data["access_token"] = access_token
                             login_temp_data["appid"] = appid
-                            logger.info(f"[Val] 成功解析凭证: OpenID={openid[:5]}..., Token={access_token[:5]}...")
+                            logger.info(
+                                f"[Val] 成功解析凭证: OpenID={openid[:5]}..., Token={access_token[:5]}..."
+                            )
                             login_success_event.set()
                         else:
                             logger.error(f"[Val] 解析失败，URL内容: {fragment}")
@@ -120,7 +124,9 @@ async def on_valo_login(bot: Bot, ev: Event):
         await browser.close()
 
         # 获取信息
-        final_info = await exchange_val_token(login_temp_data["openid"], login_temp_data["access_token"])
+        final_info = await exchange_val_token(
+            login_temp_data["openid"], login_temp_data["access_token"]
+        )
         if not final_info:
             return await bot.send("获取游戏凭证失败，请重试。")
         uid = final_info["userId"]
@@ -144,7 +150,9 @@ async def on_valo_login(bot: Bot, ev: Event):
             cookie=cookie_str,
             uid=uid,
         )
-        data = await ValBind.insert_uid(ev.user_id, ev.bot_id, uid, ev.group_id, is_digit=False)
+        data = await ValBind.insert_uid(
+            ev.user_id, ev.bot_id, uid, ev.group_id, is_digit=False
+        )
         return await send_diff_msg(
             bot,
             data,
@@ -182,8 +190,12 @@ async def send_va_bind_uid_msg(bot: Bot, ev: Event):
 
     if "绑定" in ev.command:
         if not uid:
-            return await bot.send("该命令需要带上正确的uid!\n如果不知道, 可以使用va搜索命令查询\n如 va搜索爱丽数码")
-        data = await ValBind.insert_uid(qid, ev.bot_id, uid, ev.group_id, is_digit=False)
+            return await bot.send(
+                "该命令需要带上正确的uid!\n如果不知道, 可以使用va搜索命令查询\n如 va搜索爱丽数码"
+            )
+        data = await ValBind.insert_uid(
+            qid, ev.bot_id, uid, ev.group_id, is_digit=False
+        )
         return await send_diff_msg(
             bot,
             data,
@@ -221,13 +233,18 @@ async def send_va_search_msg(bot: Bot, ev: Event):
     players = await search_player_with_name(name)
     print(players)
     if not players or players == 8000004:
-        return await bot.send("未找到用户！\n请确认名称是否完整, 以及无畏契约设置是否允许他人搜索！")
+        return await bot.send(
+            "未找到用户！\n请确认名称是否完整, 以及无畏契约设置是否允许他人搜索！"
+        )
     if isinstance(players, int):
         buttons = None
         im = get_error(players)
         await bot.send_option(im, buttons)
     else:
-        buttons = [Button(f"✏️绑定{one_player['userId']}", f"va绑定{one_player['userId']}") for one_player in players]
+        buttons = [
+            Button(f"✏️绑定{one_player['userId']}", f"va绑定{one_player['userId']}")
+            for one_player in players
+        ]
         out_msg = []
         for one_player in players:
             out_msg.append(

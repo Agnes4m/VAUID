@@ -4,7 +4,9 @@ import aiohttp
 
 from gsuid_core.logger import logger
 
-MVAL_API = "https://app.mval.qq.com/go/auth/login_by_qq?source_game_zone=agame&game_zone=agame"
+MVAL_API = (
+    "https://app.mval.qq.com/go/auth/login_by_qq?source_game_zone=agame&game_zone=agame"
+)
 
 
 async def exchange_val_token(openid: str, access_token: str) -> Optional[Dict]:
