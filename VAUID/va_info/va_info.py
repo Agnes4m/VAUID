@@ -74,7 +74,9 @@ async def get_va_info_img(ev: Event, uid: str) -> Union[str, bytes]:
 
     online: Optional[CardOnline] = None
     if isinstance(online_raw, (int, BaseException)):
-        logger.error(f"online error: {get_error(online_raw) if isinstance(online_raw, int) else online_raw}")
+        logger.error(
+            f"online error: {get_error(online_raw) if isinstance(online_raw, int) else online_raw}"
+        )
     else:
         online = online_raw
 
@@ -156,7 +158,9 @@ async def draw_va_info_img(
 
     # 在线状态
     if online is not None and online.get("online_text"):
-        online_filename = "online.png" if "在线" in online["online_text"] else "offline.png"
+        online_filename = (
+            "online.png" if "在线" in online["online_text"] else "offline.png"
+        )
         online_img = get_cached_texture(f"online/{online_filename}")
         easy_paste(img, online_img, (180, 190), direction="cc")
 
@@ -167,7 +171,9 @@ async def draw_va_info_img(
     # 文字信息
     img_draw.text((240, 60), detail["nickName"], (255, 255, 255, 255), va_font_42)
     img_draw.text((240, 120), card_info["name"], (200, 200, 200, 255), va_font_30)
-    img_draw.text((240, 160), f"UID {detail['appNum']}", (200, 200, 200, 255), va_font_20)
+    img_draw.text(
+        (240, 160), f"UID {detail['appNum']}", (200, 200, 200, 255), va_font_20
+    )
 
     # === 综合信息 ===
     rank_bg = images["bg"]
@@ -261,7 +267,9 @@ async def draw_va_info_img(
         (590, 210),  # 右上
     ]
 
-    for pos, (six_val, p_six_val) in zip(data_positions, zip(six_info["data_array"], p_six_info["data_array"])):
+    for pos, (six_val, p_six_val) in zip(
+        data_positions, zip(six_info["data_array"], p_six_info["data_array"])
+    ):
         # 计算从中心到标签位置的方向向量
         dx = pos[0] - center_x
         dy = pos[1] - center_y
@@ -269,7 +277,9 @@ async def draw_va_info_img(
         # 向外移动 20 像素
         new_x = pos[0] + (dx / distance) * 20
         new_y = pos[1] + (dy / distance) * 20
-        draw_base.text((new_x, new_y), f"{p_six_val} | {six_val}", "white", va_font_20, "mm")
+        draw_base.text(
+            (new_x, new_y), f"{p_six_val} | {six_val}", "white", va_font_20, "mm"
+        )
 
     draw_base.text((465, 628), six_info["sub_tab_name"], "white", va_font_30, "mm")
 
@@ -359,7 +369,13 @@ async def draw_asset_section(
 
         # 绘制物品名称
         item_name = item.get(name_key, "未知物品")
-        img_draw.text((x + 50, y + size[1] + 40), item_name, (255, 255, 255, 255), va_font_20, "mm")
+        img_draw.text(
+            (x + 50, y + size[1] + 40),
+            item_name,
+            (255, 255, 255, 255),
+            va_font_20,
+            "mm",
+        )
 
     y_offset += section_bottom_offset
     return y_offset
@@ -422,7 +438,9 @@ async def get_va_asset_img(ev: Event, uid: str) -> Union[str, bytes]:
     # 文字信息
     img_draw.text((240, 60), detail["nickName"], (255, 255, 255, 255), va_font_42)
     # img_draw.text((240, 120), detail["gameInfoList"][0][], (200, 200, 200, 255), va_font_30)
-    img_draw.text((240, 160), f"UID {detail['appNum']}", (200, 200, 200, 255), va_font_20)
+    img_draw.text(
+        (240, 160), f"UID {detail['appNum']}", (200, 200, 200, 255), va_font_20
+    )
 
     # 绘制各分类
     y_offset = 100
@@ -431,35 +449,67 @@ async def get_va_asset_img(ev: Event, uid: str) -> Union[str, bytes]:
     skin_data = asset_data.get("skin", {})
     if skin_data:
         y_offset = await draw_asset_section(
-            img, img_draw, skin_data, "皮肤", y_offset, icon_key="icon", name_key="name", size=(180, 80)
+            img,
+            img_draw,
+            skin_data,
+            "皮肤",
+            y_offset,
+            icon_key="icon",
+            name_key="name",
+            size=(180, 80),
         )
 
     # 2. 英雄 (Agent)
     agent_data = asset_data.get("agent", {})
     if agent_data:
         y_offset = await draw_asset_section(
-            img, img_draw, agent_data, "英雄", y_offset, icon_key="icon", name_key="name"
+            img,
+            img_draw,
+            agent_data,
+            "英雄",
+            y_offset,
+            icon_key="icon",
+            name_key="name",
         )
 
     # 3. 喷漆 (Spray)
     spray_data = asset_data.get("spray", {})
     if spray_data:
         y_offset = await draw_asset_section(
-            img, img_draw, spray_data, "喷漆", y_offset, icon_key="icon", name_key="name"
+            img,
+            img_draw,
+            spray_data,
+            "喷漆",
+            y_offset,
+            icon_key="icon",
+            name_key="name",
         )
 
     # 4. 卡面 (Card)
     card_data = asset_data.get("card", {})
     if card_data:
         y_offset = await draw_asset_section(
-            img, img_draw, card_data, "卡面", y_offset, icon_key="icon", name_key="name", size=(80, 150)
+            img,
+            img_draw,
+            card_data,
+            "卡面",
+            y_offset,
+            icon_key="icon",
+            name_key="name",
+            size=(80, 150),
         )
 
     # 5. 挂饰 (Charm)
     charm_data = asset_data.get("charm", {})
     if charm_data:
         y_offset = await draw_asset_section(
-            img, img_draw, charm_data, "挂饰", y_offset + 50, icon_key="icon", name_key="name"
+            img,
+            img_draw,
+            charm_data,
+            "挂饰",
+            y_offset + 50,
+            icon_key="icon",
+            name_key="name",
         )
 
     return await convert_img(img)
