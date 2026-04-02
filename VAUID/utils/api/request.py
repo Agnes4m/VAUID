@@ -42,8 +42,6 @@ DEFAULT_TIMEOUT = 300
 
 @dataclass
 class ApiRequest:
-    """API 请求配置"""
-
     url: str
     method: Literal["GET", "POST"] = "GET"
     params: Optional[Dict[str, Any]] = None
@@ -53,8 +51,6 @@ class ApiRequest:
 
 @dataclass
 class QueryContext:
-    """查询上下文 - 简化版"""
-
     user_id: str
     bot_id: str
     cookie: Optional[str] = None
@@ -62,22 +58,18 @@ class QueryContext:
     _random_cookie: Optional[str] = field(default=None, repr=False)
 
     async def init(self):
-        """初始化上下文"""
         opuid, ck = await WeGameApi._get_cookie_by_id(self.user_id, self.bot_id)
         self.opuid = opuid
         self.cookie = ck
         return self
 
     async def get_random_cookie(self) -> Optional[str]:
-        """获取随机 cookie（带缓存）"""
         if self._random_cookie is None:
             _, self._random_cookie = await WeGameApi.get_sence()
         return self._random_cookie
 
 
 class WeGameApi:
-    """WeGame API 客户端"""
-
     ssl_verify: bool = False
     _HEADER: Dict[str, str] = {
         "User-Agent": (
@@ -89,21 +81,15 @@ class WeGameApi:
         "Content-Type": "application/json; charset=utf-8",
     }
 
-    # ========== 上下文管理 ==========
-
     @classmethod
     async def create_context(cls, ev: Event) -> QueryContext:
-        """创建查询上下文"""
         bot_id = ev.bot_id[0] if isinstance(ev.bot_id, list) else ev.bot_id
         ctx = QueryContext(ev.user_id, bot_id)
         _ = await ctx.init()
         return ctx
 
-    # ========== Cookie 管理 ==========
-
     @staticmethod
     async def _get_cookie(uid: str) -> List[str]:
-        """通过 uid 获取 cookie"""
         cookie = await ValUser.get_user_cookie_by_uid(uid)
         if cookie is None:
             raise Exception("No valid cookie")
@@ -111,7 +97,6 @@ class WeGameApi:
 
     @staticmethod
     async def _get_cookie_by_id(user_id: str, bot_id: str) -> List[str]:
-        """通过 user_id 获取 cookie"""
         data = await ValUser.select_data(user_id, bot_id)
         if data is None:
             raise Exception("No valid uid")
@@ -119,7 +104,6 @@ class WeGameApi:
 
     @staticmethod
     async def get_sence() -> List[str]:
-        """获取随机用户 cookie"""
         user_list = await ValUser.get_all_user()
         if not user_list:
             return ["", ""]
@@ -133,8 +117,6 @@ class WeGameApi:
             raise Exception("No valid cookie")
         return [user.uid, cookie]
 
-    # ========== 基础请求方法 ==========
-
     async def _va_request(
         self,
         url: str,
@@ -143,7 +125,6 @@ class WeGameApi:
         params: Optional[Dict[str, Any]] = None,
         json: Optional[Dict[str, Any]] = None,
     ) -> Union[Dict, int]:
-        """统一的 API 请求方法"""
         req_headers = dict(self._HEADER)
         if headers:
             headers = {k.capitalize() if k.lower() == "cookie" else k: v for k, v in headers.items()}
@@ -186,7 +167,6 @@ class WeGameApi:
         parser: Optional[Callable[[Dict], Any]] = None,
         default_on_error: Any = "",
     ) -> Union[Any, int]:
-        """统一处理 API 响应"""
         if isinstance(data, int):
             return data
         if data.get("result", 0) != 0:
@@ -200,22 +180,12 @@ class WeGameApi:
         cookie: Optional[str] = None,
         random_cookie: Optional[str] = None,
     ) -> Union[Any, int]:
-        """带 cookie 回退机制的请求方法
-
-        Args:
-            request: API 请求配置
-            parser: 数据解析函数
-            cookie: 优先使用的 cookie
-            random_cookie: 备用 cookie
-        """
-        # 使用优先 cookie 请求
         if cookie:
             data = await self._va_request(request.url, request.method, {"Cookie": cookie}, request.params, request.json)
             result = self._parse_response(data, parser, default_on_error="")
             if not isinstance(result, int) or result >= 0:
                 return result
 
-        # 使用备用 cookie 重试
         if not random_cookie:
             _, random_cookie = await self.get_sence()
         if not random_cookie:
@@ -226,10 +196,7 @@ class WeGameApi:
         )
         return self._parse_response(data, parser, default_on_error="")
 
-    # ========== 公开 API 方法 ==========
-
     async def search_player(self, key_word: str) -> Union[List[InfoBody], int]:
-        """搜索玩家"""
         data = await self._va_request(
             SearchAPI,
             params={
@@ -245,7 +212,6 @@ class WeGameApi:
         return cast(List[InfoBody], data["data"]["userList"])
 
     async def get_player_info(self, ctx: QueryContext, uid_list: List[str]) -> Union[SummonerInfo, int, str, None]:
-        """获取玩家信息"""
         if len(uid_list) < 1 or not ctx.cookie:
             return None
 
@@ -272,7 +238,6 @@ class WeGameApi:
         return cast(SummonerInfo, data["data"][0])
 
     async def get_player_card(self, uid: str) -> Union[CardInfo, int, str]:
-        """获取玩家卡片"""
         uid, ck = await self._get_cookie(uid)
         data = await self._va_request(CardAPI, headers={"Cookie": ck}, json={"uuid": uid, "jump_key": "mine"})
         return self._parse_response(data, lambda d: cast(CardInfo, d["data"]), default_on_error="")
@@ -280,7 +245,6 @@ class WeGameApi:
     async def get_detail_card(
         self, scene: str, cookie: Optional[str] = None, random_cookie: Optional[str] = None
     ) -> Union[List[Battle], int]:
-        """获取详细卡片"""
         request = ApiRequest(url=ValCardAPI, json={"scene": scene})
         return await self._request_with_fallback(
             request,
@@ -292,7 +256,6 @@ class WeGameApi:
     async def get_online(
         self, uid: str, scene: str, cookie: Optional[str] = None, random_cookie: Optional[str] = None
     ) -> Union[CardOnline, int]:
-        """获取在线信息"""
         request = ApiRequest(url=OnlineAPI, json={"uuid": uid, "scene": scene})
         return await self._request_with_fallback(
             request,
@@ -304,7 +267,6 @@ class WeGameApi:
     async def get_gun(
         self, uid: str, scene: str, cookie: Optional[str] = None, random_cookie: Optional[str] = None
     ) -> Union[List[GunInfo], int]:
-        """获取枪械信息"""
         request = ApiRequest(
             url=GunAPI,
             json={"scene": scene, "season_id": SEASON_ID, "queue_id": "255"},
@@ -319,7 +281,6 @@ class WeGameApi:
     async def get_map(
         self, uid: str, scene: str, cookie: Optional[str] = None, random_cookie: Optional[str] = None
     ) -> Union[List[MapInfo], int]:
-        """获取地图信息"""
         request = ApiRequest(
             url=MapAPI,
             json={"scene": scene, "season_id": SEASON_ID, "queue_id": "255"},
@@ -334,7 +295,6 @@ class WeGameApi:
     async def get_vive(
         self, uid: str, scene: str, cookie: Optional[str] = None, random_cookie: Optional[str] = None
     ) -> Union[List[Vive], int]:
-        """获取 Vive 信息"""
         request = ApiRequest(url=ViveAPI, json={"scene": scene})
         return await self._request_with_fallback(
             request,
@@ -346,7 +306,6 @@ class WeGameApi:
     async def get_pf(
         self, uid: str, scene: str, cookie: Optional[str] = None, random_cookie: Optional[str] = None
     ) -> Union[List[PFInfo], int]:
-        """获取 PF 信息"""
         request = ApiRequest(
             url=PFAPI,
             json={"scene": scene, "season_id": SEASON_ID, "queue_id": "255"},
@@ -361,7 +320,6 @@ class WeGameApi:
     async def get_shop(
         self, uid: str, scene: str, cookie: Optional[str] = None, random_cookie: Optional[str] = None
     ) -> Union[List[Shop], int]:
-        """获取商店信息"""
         request = ApiRequest(
             url=ShopAPI,
             json={
@@ -381,7 +339,6 @@ class WeGameApi:
     async def get_asset(
         self, scene: str, cookie: Optional[str] = None, random_cookie: Optional[str] = None
     ) -> Union[AssetData, int]:
-        """获取资产信息"""
         request = ApiRequest(
             url=AssetAPI,
             json={

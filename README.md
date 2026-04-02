@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/Agnes4m/VALUID"><img src="./img/logo.png" width="256" height="256" alt="VALUID"></a>
 </p>
-<h1 align = "center">VALUID 0.2.0</h1>
+<h1 align = "center">VALUID 0.3.0</h1>
 <h4 align = "center">🚧支持QQ群/频道、OneBot、微信、KOOK、Tg、飞书、DoDo、Discord的无畏契约Bot插件🚧</h4>
 <div align = "center">
         <a href="http://docs.gsuid.gbots.work/#/" target="_blank">安装文档</a>
@@ -17,7 +17,7 @@
 >
 > 支持 NoneBot2 & HoshinoBot & ZeroBot & YunzaiBot & Koishi 的无畏契约国服 Bot 插件
 
-## 丨安装方式(未支持)
+## 丨安装方式
 
 1. 发送`core安装插件VAUID`
 2. 发送`core重启`应用插件

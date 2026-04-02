@@ -5,11 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsuid_core.webconsole.mount_app import PageSchema, GsAdminModel, site
 from gsuid_core.utils.database.startup import exec_list
-from gsuid_core.utils.database.base_models import (
-    Bind,
-    User,
-    with_session,
-)
+from gsuid_core.utils.database.base_models import Bind, User, with_session
 
 exec_list.extend(['ALTER TABLE VAUser ADD COLUMN platform TEXT DEFAULT ""'])
 
@@ -36,7 +32,6 @@ class ValUser(User):
         user_id: str,
         uid: str,
         cookie: str,
-        # platform: str = "Windows",
     ) -> T_ValUser:
         obj = await cls.base_select_data(
             bot_id=bot_id,
@@ -45,7 +40,6 @@ class ValUser(User):
         )
         if obj:
             obj.cookie = cookie
-            # obj.platform = platform
             session.add(obj)
             await session.commit()
             await session.refresh(obj)
