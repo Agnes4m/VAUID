@@ -5,6 +5,10 @@ from gsuid_core.bot import Bot
 from gsuid_core.logger import logger
 from gsuid_core.models import Event
 
+from .. import (
+    va_notify as va_notify_module,  # noqa: F401
+    va_subscribe as va_subscribe_module,  # noqa: F401
+)
 from .va_info import get_va_info_img, get_va_asset_img
 from ..utils.helper import get_bind_uid
 from ..utils.error_reply import UID_HINT

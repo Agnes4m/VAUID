@@ -110,9 +110,7 @@ async def draw_va_info_img(
         rank_draw.text((x, y + 40), label, (255, 255, 255, 255), va_font_20, "mm")
 
     # 左侧信息
-    rank_draw.text(
-        (100, 170), card_info["left_data"]["title"], (255, 255, 255, 255), va_font_20, "mm"
-    )
+    rank_draw.text((100, 170), card_info["left_data"]["title"], (255, 255, 255, 255), va_font_20, "mm")
     easy_paste(rank_bg, images["rank"].resize((80, 80)), (100, 100), "cc")
 
     draw_stat(100, 260, f"Lv{detail['gameInfoList'][0]['level']}", "游戏等级")
@@ -120,9 +118,7 @@ async def draw_va_info_img(
     draw_stat(100, 520, card_info["left_data"]["list"][2]["content"], "ACS")
     draw_stat(280, 520, card_info["middle_data"]["content"], "KAST")
     draw_stat(460, 520, card_info["round_win_rate"]["content"], "回合胜率")
-    draw_stat(
-        640, 520, card_info["right_data"]["list"][2]["content"], "赛季精准击败"
-    )
+    draw_stat(640, 520, card_info["right_data"]["list"][2]["content"], "赛季精准击败")
     draw_stat(640, 390, card_info["right_data"]["list"][1]["content"], "赛季胜率")
     draw_stat(640, 260, card_info["right_data"]["list"][0]["content"], "赛季 KDA")
 
@@ -178,9 +174,7 @@ async def draw_va_info_img(
         (590, 210),  # 右上
     ]
 
-    for pos, (six_val, p_six_val) in zip(
-        data_positions, zip(six_info["data_array"], p_six_info["data_array"])
-    ):
+    for pos, (six_val, p_six_val) in zip(data_positions, zip(six_info["data_array"], p_six_info["data_array"])):
         dx = pos[0] - center_x
         dy = pos[1] - center_y
         distance = math.sqrt(dx**2 + dy**2)
@@ -246,9 +240,7 @@ async def draw_asset_section(
     if not items:
         return y_offset
 
-    img_draw.text(
-        (100, y_offset + 100), section_name, (255, 255, 255, 255), va_font_30
-    )
+    img_draw.text((100, y_offset + 100), section_name, (255, 255, 255, 255), va_font_30)
     y_offset += title_offset
 
     for i, item in enumerate(items[:max_items]):
@@ -268,9 +260,7 @@ async def draw_asset_section(
             pass
 
         item_name = item.get(name_key, "未知物品")
-        img_draw.text(
-            (x + 50, y + size[1] + 40), item_name, (255, 255, 255, 255), va_font_20, "mm"
-        )
+        img_draw.text((x + 50, y + size[1] + 40), item_name, (255, 255, 255, 255), va_font_20, "mm")
 
     y_offset += section_bottom_offset
     return y_offset

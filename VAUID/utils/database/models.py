@@ -7,7 +7,13 @@ from gsuid_core.webconsole.mount_app import PageSchema, GsAdminModel, site
 from gsuid_core.utils.database.startup import exec_list
 from gsuid_core.utils.database.base_models import Bind, User, with_session
 
-exec_list.extend(['ALTER TABLE VAUser ADD COLUMN platform TEXT DEFAULT ""'])
+exec_list.extend(
+    [
+        'ALTER TABLE VAUser ADD COLUMN platform TEXT DEFAULT ""',
+        'ALTER TABLE VAUser ADD COLUMN latest_battle_id TEXT DEFAULT ""',
+        "ALTER TABLE VAUser ADD COLUMN latest_battle_time INTEGER DEFAULT 0",
+    ]
+)
 
 T_ValUser = TypeVar("T_ValUser", bound="ValUser")
 
@@ -20,8 +26,30 @@ class ValBind(Bind):
 
 class ValUser(User):
     uid: Optional[str] = Field(default=None, title="VAUID")
+    latest_battle_id: Optional[str] = Field(default=None, title="最新战绩ID")
+    latest_battle_time: Optional[int] = Field(default=0, title="最新战绩时间")
 
     model_config = {"table": True}  # type: ignore
+
+    @classmethod
+    @with_session
+    async def get_latest_battle_id(cls, user_id: str, bot_id: str) -> Optional[str]:
+        """获取用户最新战绩ID"""
+        data = await cls.select_data(user_id, bot_id)
+        return data.latest_battle_id if data else None
+
+    @classmethod
+    @with_session
+    async def update_latest_battle(
+        cls, session: AsyncSession, user_id: str, bot_id: str, battle_id: str, battle_time: int
+    ) -> None:
+        """更新用户最新战绩ID"""
+        data = await cls.select_data(user_id, bot_id)
+        if data:
+            data.latest_battle_id = battle_id
+            data.latest_battle_time = battle_time
+            session.add(data)
+            await session.commit()
 
     @classmethod
     @with_session

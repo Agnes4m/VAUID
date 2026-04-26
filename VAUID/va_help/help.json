@@ -57,6 +57,27 @@
       }
     ]
   },
+  "订阅服务": {
+    "desc": "战绩订阅推送，每5分钟检查一次新战绩",
+    "data": [
+      {
+        "name": "订阅",
+        "desc": "开启战绩订阅推送，有新战绩时自动通知",
+        "eg": "订阅",
+        "need_ck": true,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "取消订阅",
+        "desc": "关闭战绩订阅推送",
+        "eg": "取消订阅",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      }
+    ]
+  },
   "其他服务": {
     "desc": "一些杂项服务",
     "data": [
