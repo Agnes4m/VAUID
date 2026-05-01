@@ -9,9 +9,9 @@ from gsuid_core.utils.database.base_models import Bind, User, with_session
 
 exec_list.extend(
     [
-        'ALTER TABLE VAUser ADD COLUMN platform TEXT DEFAULT ""',
-        'ALTER TABLE VAUser ADD COLUMN latest_battle_id TEXT DEFAULT ""',
-        "ALTER TABLE VAUser ADD COLUMN latest_battle_time INTEGER DEFAULT 0",
+        'ALTER TABLE ValUser ADD COLUMN platform TEXT DEFAULT ""',
+        'ALTER TABLE ValUser ADD COLUMN latest_battle_id TEXT DEFAULT ""',
+        "ALTER TABLE ValUser ADD COLUMN latest_battle_time INTEGER DEFAULT 0",
     ]
 )
 

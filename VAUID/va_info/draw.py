@@ -140,8 +140,8 @@ async def draw_va_info_img(
     six_info = vive[1]["body"]["radar_chart"]["tabs"][0]
     p_six_info = vive[1]["body"]["radar_chart"]["player_dict"]
 
-    logger.info(f"标准值 proportion_array: {six_info['proportion_array']}")
-    logger.info(f"玩家值 proportion_array: {p_six_info['proportion_array']}")
+    logger.debug(f"标准值 proportion_array: {six_info['proportion_array']}")
+    logger.debug(f"玩家值 proportion_array: {p_six_info['proportion_array']}")
 
     base_image = get_cached_texture("six_bg.png")
 
