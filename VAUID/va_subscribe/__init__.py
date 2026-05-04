@@ -77,9 +77,13 @@ async def subscribe_va_record(bot: Bot, ev: Event):
                     parsed_card = _parse_card(card)
                     if parsed_card:
                         scene = parsed_card["role_info"]["friend_scene"]
-                        latest_battle_id = await get_user_battle_id(uid, scene, user_data.cookie)
+                        latest_battle_id = await get_user_battle_id(
+                            uid, scene, user_data.cookie
+                        )
                         if latest_battle_id:
-                            await ValUser.update_latest_battle(user_id, bot_id, latest_battle_id, 0)
+                            await ValUser.update_latest_battle(
+                                user_id, bot_id, latest_battle_id, 0
+                            )
                             logger.info(f"[VA] 已设置基准battle_id: {latest_battle_id}")
         except Exception as e:
             logger.error(f"[VA] 设置基准battle_id失败: {e}")
@@ -108,7 +112,9 @@ async def cancel_subscribe_va_record(bot: Bot, ev: Event):
     await bot.send("[VA] VA战绩订阅已取消！")
 
 
-async def check_new_battle(uid: str, user_id: str, bot_id: str) -> tuple[bool, Optional[Dict[str, Any]]]:
+async def check_new_battle(
+    uid: str, user_id: str, bot_id: str
+) -> tuple[bool, Optional[Dict[str, Any]]]:
     """
     检查用户是否有新战绩
 
@@ -136,7 +142,13 @@ async def check_new_battle(uid: str, user_id: str, bot_id: str) -> tuple[bool, O
             type(
                 "Ctx",
                 (),
-                {"user_id": user_id, "bot_id": bot_id, "cookie": ck, "opuid": cookie_uid, "_random_cookie": None},
+                {
+                    "user_id": user_id,
+                    "bot_id": bot_id,
+                    "cookie": ck,
+                    "opuid": cookie_uid,
+                    "_random_cookie": None,
+                },
             )(),
             [uid],
         )
@@ -156,7 +168,9 @@ async def check_new_battle(uid: str, user_id: str, bot_id: str) -> tuple[bool, O
         random_cookie = await va_api.get_sence()[1] if not user_data.cookie else None
 
         # 获取最新战绩
-        battle_data = await va_api.get_detail_card(scene, user_data.cookie, random_cookie)
+        battle_data = await va_api.get_detail_card(
+            scene, user_data.cookie, random_cookie
+        )
         if not isinstance(battle_data, list) or len(battle_data) == 0:
             return False, None
 
@@ -167,11 +181,16 @@ async def check_new_battle(uid: str, user_id: str, bot_id: str) -> tuple[bool, O
             return False, None
 
         # 比较battle_id
-        if user_data.latest_battle_id and user_data.latest_battle_id == latest_battle_id:
+        if (
+            user_data.latest_battle_id
+            and user_data.latest_battle_id == latest_battle_id
+        ):
             return False, None
 
         # 更新缓存
-        await ValUser.update_latest_battle(user_id, bot_id, latest_battle_id, latest_battle.get("ts", 0))
+        await ValUser.update_latest_battle(
+            user_id, bot_id, latest_battle_id, latest_battle.get("ts", 0)
+        )
 
         return True, latest_battle
 

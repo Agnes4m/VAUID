@@ -16,7 +16,9 @@ def format_battle_message(battle: dict) -> str:
     result = battle.get("result_title", "")
     kda = battle.get("kda", "")
     map_name = (
-        battle.get("used_map", {}).get("name", "未知地图") if isinstance(battle.get("used_map"), dict) else "未知地图"
+        battle.get("used_map", {}).get("name", "未知地图")
+        if isinstance(battle.get("used_map"), dict)
+        else "未知地图"
     )
     time_str = battle.get("time", "")
 
@@ -42,7 +44,9 @@ async def va_notify_match():
                     logger.debug(f"[VA] 用户 {subscribe.user_id} 未绑定UID，跳过")
                     continue
 
-                has_new, battle = await check_new_battle(uid, subscribe.user_id, subscribe.bot_id)
+                has_new, battle = await check_new_battle(
+                    uid, subscribe.user_id, subscribe.bot_id
+                )
                 if has_new and battle:
                     msg = format_battle_message(battle)
                     await subscribe.send(msg)

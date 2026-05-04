@@ -94,7 +94,9 @@ class DrawUtils:
         hero_tasks = [save_img(one_hero["image_url"], "hero2") for one_hero in hero[:3]]
         hero_images = await asyncio.gather(*hero_tasks)
 
-        for index, (one_hero, hero_img) in enumerate(zip(hero[:3], hero_images), start=1):
+        for index, (one_hero, hero_img) in enumerate(
+            zip(hero[:3], hero_images), start=1
+        ):
             hero_one = Image.new("RGBA", (700, 70), (0, 0, 0, 0))
 
             # 创建圆角头像背景
@@ -131,7 +133,9 @@ class DrawUtils:
         weapon_tasks = [save_img(one_gun["image_url"], "weapon") for one_gun in gun[:8]]
         weapon_images = await asyncio.gather(*weapon_tasks)
 
-        for index, (one_gun, one_weapon) in enumerate(zip(gun[:8], weapon_images), start=1):
+        for index, (one_gun, one_weapon) in enumerate(
+            zip(gun[:8], weapon_images), start=1
+        ):
             weapon_bg = get_cached_texture("weapon.png")
             weapon_draw = ImageDraw.Draw(weapon_bg)
 
@@ -178,7 +182,9 @@ class DrawUtils:
             easy_paste(left_bg, weapon_bg, (weapon_x, weapon_y), "lt")
 
     @staticmethod
-    def draw_vive_section(right_bg: Image.Image, right_draw: ImageDrawType, vive: List[Vive]):
+    def draw_vive_section(
+        right_bg: Image.Image, right_draw: ImageDrawType, vive: List[Vive]
+    ):
         """绘制射击数据部分"""
         if vive is None:
             return
@@ -187,7 +193,9 @@ class DrawUtils:
         positions = [(370, 45), (370, 120), (370, 195)]
 
         for data, pos in zip(shooting_data[:3], positions):
-            right_draw.text(pos, data["content"], (255, 255, 255, 255), va_font_30, "mm")
+            right_draw.text(
+                pos, data["content"], (255, 255, 255, 255), va_font_30, "mm"
+            )
             right_draw.text(
                 (pos[0] + 280, pos[1]),
                 data["sub_content"],
@@ -223,11 +231,13 @@ class DrawUtils:
                     "失败": "head_icon_fail",
                     "平局": "head_icon_draw",
                 }
-                icon_key: Literal["head_icon_win", "head_icon_fail", "head_icon_draw"] = icon_key_map.get(
-                    battle["result_title"], "head_icon_draw"
-                )
+                icon_key: Literal[
+                    "head_icon_win", "head_icon_fail", "head_icon_draw"
+                ] = icon_key_map.get(battle["result_title"], "head_icon_draw")
                 if icon_key in battle["score_level"]:
-                    image_tasks.append(save_img(battle["score_level"][icon_key], "rank"))
+                    image_tasks.append(
+                        save_img(battle["score_level"][icon_key], "rank")
+                    )
             if battle.get("achievement"):
                 for ach in battle["achievement"]:
                     image_tasks.append(save_img(ach["icon"], "icon"))
@@ -243,7 +253,9 @@ class DrawUtils:
                 "胜利": ("win", "green_head.png"),
                 "失败": ("fail", "red_head.png"),
             }
-            result, head_file = result_map.get(one_valcard["result_title"], ("draw", "grey_head.png"))
+            result, head_file = result_map.get(
+                one_valcard["result_title"], ("draw", "grey_head.png")
+            )
 
             head2_bg = get_cached_texture(head_file)
             result_color = one_valcard["result_color"]
@@ -307,7 +319,9 @@ class DrawUtils:
                     radius=15,
                     fill=hex_to_rgba(score_color, alpha=255),
                 )
-                score_draw.text((40, 20), one_valcard["score"], "white", va_font_20, "mm")
+                score_draw.text(
+                    (40, 20), one_valcard["score"], "white", va_font_20, "mm"
+                )
                 easy_paste(battle_bg, score_bg, (610, 25), "lt")
 
             if one_valcard["is_friend"] == 1:
@@ -349,8 +363,12 @@ class DrawUtils:
         # 角度：270°, 210°, 150°, 90°, 30°, 330°
         hexagon_points = [
             (
-                center_x + (proportion_array[i] / 100 * 200) * math.cos(-math.pi / 2 - math.pi / 3 * i),
-                center_y + (proportion_array[i] / 100 * 200) * math.sin(-math.pi / 2 - math.pi / 3 * i),
+                center_x
+                + (proportion_array[i] / 100 * 200)
+                * math.cos(-math.pi / 2 - math.pi / 3 * i),
+                center_y
+                + (proportion_array[i] / 100 * 200)
+                * math.sin(-math.pi / 2 - math.pi / 3 * i),
             )
             for i in range(6)
         ]
