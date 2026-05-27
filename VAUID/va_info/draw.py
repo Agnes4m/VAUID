@@ -108,7 +108,6 @@ async def draw_va_info_img(
     rank_bg.paste(images["rank_small"], (0, 610), images["rank_small"])
     easy_paste(rank_bg, images["bg_hero"], (0, 0), "lt")
 
-    # 使用辅助函数绘制文本，减少重复代码
     def draw_stat(x: int, y: int, value: str, label: str):
         rank_draw.text((x, y), value, (255, 255, 255, 255), va_font_42, "mm")
         rank_draw.text((x, y + 40), label, (255, 255, 255, 255), va_font_20, "mm")
