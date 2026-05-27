@@ -25,6 +25,7 @@ from gsuid_core.utils.image.convert import convert_img
 from .login import exchange_val_token
 from .add_ck import add_cookie
 from .search_player import search_player_with_name
+from .browser_install import ensure_browser_available, is_browser_not_installed_error
 from ..utils.api.models import LoginData
 from ..utils.error_reply import get_error
 from ..utils.database.models import ValBind, ValUser
@@ -51,8 +52,44 @@ async def on_valo_login(bot: Bot, ev: Event):
     await bot.send("正在获取登录二维码，请稍候...")
     LOGIN_URL = "https://xui.ptlogin2.qq.com/cgi-bin/xlogin?pt_enable_pwd=1&appid=716027609&pt_3rd_aid=102061775&daid=381&pt_skey_valid=0&style=35&force_qr=1&autorefresh=1&s_url=http%3A%2F%2Fconnect.qq.com&refer_cgi=m_authorize&ucheck=1&fall_to_wv=1&status_os=12&redirect_uri=auth%3A%2F%2Ftauth.qq.com%2F&client_id=102061775&pf=openmobile_android&response_type=token&scope=all&sdkp=a&sdkv=3.5.17.lite&sign=a6479455d3e49b597350f13f776a6288&status_machine=MjMxMTdSSzY2Qw%3D%3D&switch=1&time=1763280194&show_download_ui=true&h5sig=trobryxo8IPM0GaSQH12mowKG-CY65brFzkK7_-9EW4&loginty=6"
 
+    # 启动浏览器的最大重试次数
+    MAX_RETRIES = 2
+    browser_launched = False
+
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"])
+        for attempt in range(MAX_RETRIES):
+            try:
+                browser = await p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"])
+                browser_launched = True
+                break
+            except Exception as e:
+                error_str = str(e).lower()
+                logger.warning(f"[Val] 第{attempt + 1}次尝试启动浏览器失败: {e}")
+
+                if attempt < MAX_RETRIES - 1:
+                    # 尝试安装浏览器
+                    logger.info("[Val] 正在尝试自动安装浏览器...")
+                    install_success = await ensure_browser_available(bot)
+
+                    if not install_success:
+                        return await bot.send(
+                            "浏览器安装失败，请手动执行以下命令安装浏览器:\n"
+                            "pip install playwright && playwright install chromium-headless-shell"
+                        )
+                    await bot.send("浏览器安装完成，正在重试...")
+                else:
+                    # 最后一次尝试仍然失败
+                    logger.error(f"[Val] 启动浏览器失败: {e}")
+                    return await bot.send(
+                        "启动浏览器失败！请确保已安装playwright:\n"
+                        "pip install playwright\n"
+                        "然后手动安装浏览器:\n"
+                        "playwright install chromium-headless-shell"
+                    )
+
+        if not browser_launched:
+            return await bot.send("浏览器启动失败，请重试。")
+
         context = await browser.new_context(
             user_agent=(
                 "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) "
