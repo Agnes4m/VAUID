@@ -25,7 +25,7 @@ from gsuid_core.utils.image.convert import convert_img
 from .login import exchange_val_token
 from .add_ck import add_cookie
 from .search_player import search_player_with_name
-from .browser_install import ensure_browser_available, is_browser_not_installed_error
+from .browser_install import ensure_browser_available, is_browser_not_installed_error as is_browser_not_installed_error
 from ..utils.api.models import LoginData
 from ..utils.error_reply import get_error
 from ..utils.database.models import ValBind, ValUser
@@ -64,7 +64,7 @@ async def on_valo_login(bot: Bot, ev: Event):
                 break
             except Exception as e:
                 error_str = str(e).lower()
-                logger.warning(f"[Val] 第{attempt + 1}次尝试启动浏览器失败: {e}")
+                logger.warning(f"[Val] 第{attempt + 1}次尝试启动浏览器失败: {error_str}")
 
                 if attempt < MAX_RETRIES - 1:
                     # 尝试安装浏览器
