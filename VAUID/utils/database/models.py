@@ -41,7 +41,12 @@ class ValUser(User):
     @classmethod
     @with_session
     async def update_latest_battle(
-        cls, session: AsyncSession, user_id: str, bot_id: str, battle_id: str, battle_time: int
+        cls,
+        session: AsyncSession,
+        user_id: str,
+        bot_id: str,
+        battle_id: str,
+        battle_time: int,
     ) -> None:
         """更新用户最新战绩ID"""
         data = await cls.select_data(user_id, bot_id)

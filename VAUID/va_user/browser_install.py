@@ -9,7 +9,9 @@ from pathlib import Path
 from gsuid_core.logger import logger
 
 _DEFAULT_BROWSERS_PATH = str(Path.home() / ".cache" / "ms-playwright")
-_PLAYWRIGHT_BROWSERS_PATH_STR = os.environ.get("PLAYWRIGHT_BROWSERS_PATH", _DEFAULT_BROWSERS_PATH)
+_PLAYWRIGHT_BROWSERS_PATH_STR = os.environ.get(
+    "PLAYWRIGHT_BROWSERS_PATH", _DEFAULT_BROWSERS_PATH
+)
 PLAYWRIGHT_BROWSERS_PATH = Path(_PLAYWRIGHT_BROWSERS_PATH_STR)
 
 
@@ -24,7 +26,9 @@ def get_chrome_headless_shell_executable() -> Optional[Path]:
     if chrome_shell_path.exists():
         return chrome_shell_path
 
-    chromium_default = PLAYWRIGHT_BROWSERS_PATH / "chromium-1208" / "chrome-linux" / "chrome"
+    chromium_default = (
+        PLAYWRIGHT_BROWSERS_PATH / "chromium-1208" / "chrome-linux" / "chrome"
+    )
     if chromium_default.exists():
         return chromium_default
     return None
@@ -82,7 +86,9 @@ async def install_browsers(bot=None) -> bool:
     except FileNotFoundError:
         logger.error("[Val] 未找到playwright命令")
         if bot:
-            await bot.send("❌ 未找到playwright命令！请先手动执行: pip install playwright")
+            await bot.send(
+                "❌ 未找到playwright命令！请先手动执行: pip install playwright"
+            )
         return False
     except Exception as e:
         logger.error(f"[Val] 安装浏览器时发生错误: {e}")

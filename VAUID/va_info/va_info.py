@@ -55,7 +55,9 @@ async def get_va_info_img(ev: Event, uid: str) -> Union[str, bytes]:
 
     online: Optional[CardOnline] = None
     if isinstance(online_raw, (int, BaseException)):
-        logger.error(f"online error: {get_error(online_raw) if isinstance(online_raw, int) else online_raw}")
+        logger.error(
+            f"online error: {get_error(online_raw) if isinstance(online_raw, int) else online_raw}"
+        )
     else:
         online = online_raw
 
@@ -120,7 +122,9 @@ async def get_va_asset_img(ev: Event, uid: str) -> Union[str, bytes]:
     easy_paste(img, line2, (220, 68))
 
     img_draw.text((240, 60), detail["nickName"], (255, 255, 255, 255), va_font_42)
-    img_draw.text((240, 160), f"UID {detail['appNum']}", (200, 200, 200, 255), va_font_20)
+    img_draw.text(
+        (240, 160), f"UID {detail['appNum']}", (200, 200, 200, 255), va_font_20
+    )
 
     y_offset = 100
 
@@ -140,13 +144,25 @@ async def get_va_asset_img(ev: Event, uid: str) -> Union[str, bytes]:
     agent_data = asset_data.get("agent", {})
     if agent_data:
         y_offset = await draw_asset_section(
-            img, img_draw, agent_data, "英雄", y_offset, icon_key="icon", name_key="name"
+            img,
+            img_draw,
+            agent_data,
+            "英雄",
+            y_offset,
+            icon_key="icon",
+            name_key="name",
         )
 
     spray_data = asset_data.get("spray", {})
     if spray_data:
         y_offset = await draw_asset_section(
-            img, img_draw, spray_data, "喷漆", y_offset, icon_key="icon", name_key="name"
+            img,
+            img_draw,
+            spray_data,
+            "喷漆",
+            y_offset,
+            icon_key="icon",
+            name_key="name",
         )
 
     card_data = asset_data.get("card", {})

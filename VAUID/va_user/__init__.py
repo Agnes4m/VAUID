@@ -25,7 +25,10 @@ from gsuid_core.utils.image.convert import convert_img
 from .login import exchange_val_token
 from .add_ck import add_cookie
 from .search_player import search_player_with_name
-from .browser_install import ensure_browser_available, is_browser_not_installed_error as is_browser_not_installed_error
+from .browser_install import (
+    ensure_browser_available,
+    is_browser_not_installed_error as is_browser_not_installed_error,
+)
 from ..utils.api.models import LoginData
 from ..utils.error_reply import get_error
 from ..utils.database.models import ValBind, ValUser
@@ -59,12 +62,16 @@ async def on_valo_login(bot: Bot, ev: Event):
     async with async_playwright() as p:
         for attempt in range(MAX_RETRIES):
             try:
-                browser = await p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"])
+                browser = await p.chromium.launch(
+                    headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"]
+                )
                 browser_launched = True
                 break
             except Exception as e:
                 error_str = str(e).lower()
-                logger.warning(f"[Val] 第{attempt + 1}次尝试启动浏览器失败: {error_str}")
+                logger.warning(
+                    f"[Val] 第{attempt + 1}次尝试启动浏览器失败: {error_str}"
+                )
 
                 if attempt < MAX_RETRIES - 1:
                     # 尝试安装浏览器
@@ -122,7 +129,9 @@ async def on_valo_login(bot: Bot, ev: Event):
                             login_temp_data["openid"] = openid
                             login_temp_data["access_token"] = access_token
                             login_temp_data["appid"] = appid
-                            logger.info(f"[Val] 成功解析凭证: OpenID={openid[:5]}..., Token={access_token[:5]}...")
+                            logger.info(
+                                f"[Val] 成功解析凭证: OpenID={openid[:5]}..., Token={access_token[:5]}..."
+                            )
                             login_success_event.set()
                         else:
                             logger.error(f"[Val] 解析失败，URL内容: {fragment}")
@@ -157,7 +166,9 @@ async def on_valo_login(bot: Bot, ev: Event):
         await browser.close()
 
         # 获取信息
-        final_info = await exchange_val_token(login_temp_data["openid"], login_temp_data["access_token"])
+        final_info = await exchange_val_token(
+            login_temp_data["openid"], login_temp_data["access_token"]
+        )
         if not final_info:
             return await bot.send("获取游戏凭证失败，请重试。")
         uid = final_info["userId"]
@@ -181,7 +192,9 @@ async def on_valo_login(bot: Bot, ev: Event):
             cookie=cookie_str,
             uid=uid,
         )
-        data = await ValBind.insert_uid(ev.user_id, ev.bot_id, uid, ev.group_id, is_digit=False)
+        data = await ValBind.insert_uid(
+            ev.user_id, ev.bot_id, uid, ev.group_id, is_digit=False
+        )
         return await send_diff_msg(
             bot,
             data,
@@ -219,8 +232,12 @@ async def send_va_bind_uid_msg(bot: Bot, ev: Event):
 
     if "绑定" in ev.command:
         if not uid:
-            return await bot.send("该命令需要带上正确的uid!\n如果不知道, 可以使用va搜索命令查询\n如 va搜索爱丽数码")
-        data = await ValBind.insert_uid(qid, ev.bot_id, uid, ev.group_id, is_digit=False)
+            return await bot.send(
+                "该命令需要带上正确的uid!\n如果不知道, 可以使用va搜索命令查询\n如 va搜索爱丽数码"
+            )
+        data = await ValBind.insert_uid(
+            qid, ev.bot_id, uid, ev.group_id, is_digit=False
+        )
         return await send_diff_msg(
             bot,
             data,
@@ -258,13 +275,18 @@ async def send_va_search_msg(bot: Bot, ev: Event):
     players = await search_player_with_name(name)
     print(players)
     if not players or players == 8000004:
-        return await bot.send("未找到用户！\n请确认名称是否完整, 以及无畏契约设置是否允许他人搜索！")
+        return await bot.send(
+            "未找到用户！\n请确认名称是否完整, 以及无畏契约设置是否允许他人搜索！"
+        )
     if isinstance(players, int):
         buttons = None
         im = get_error(players)
         await bot.send_option(im, buttons)
     else:
-        buttons = [Button(f"✏️绑定{one_player['userId']}", f"va绑定{one_player['userId']}") for one_player in players]
+        buttons = [
+            Button(f"✏️绑定{one_player['userId']}", f"va绑定{one_player['userId']}")
+            for one_player in players
+        ]
         out_msg = []
         for one_player in players:
             out_msg.append(

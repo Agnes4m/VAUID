@@ -85,7 +85,9 @@ async def draw_va_info_img(
 
     # 在线状态
     if online is not None and online.get("online_text"):
-        online_filename = "online.png" if "在线" in online["online_text"] else "offline.png"
+        online_filename = (
+            "online.png" if "在线" in online["online_text"] else "offline.png"
+        )
         online_img = get_cached_texture(f"online/{online_filename}")
         easy_paste(img, online_img, (180, 190), direction="cc")
 
@@ -96,7 +98,9 @@ async def draw_va_info_img(
     # 文字信息
     img_draw.text((240, 60), detail["nickName"], (255, 255, 255, 255), va_font_42)
     img_draw.text((240, 120), card_info["name"], (200, 200, 200, 255), va_font_30)
-    img_draw.text((240, 160), f"UID {detail['appNum']}", (200, 200, 200, 255), va_font_20)
+    img_draw.text(
+        (240, 160), f"UID {detail['appNum']}", (200, 200, 200, 255), va_font_20
+    )
 
     # === 综合信息 ===
     rank_bg = images["bg"]
@@ -109,7 +113,13 @@ async def draw_va_info_img(
         rank_draw.text((x, y + 40), label, (255, 255, 255, 255), va_font_20, "mm")
 
     # 左侧信息
-    rank_draw.text((100, 170), card_info["left_data"]["title"], (255, 255, 255, 255), va_font_20, "mm")
+    rank_draw.text(
+        (100, 170),
+        card_info["left_data"]["title"],
+        (255, 255, 255, 255),
+        va_font_20,
+        "mm",
+    )
     easy_paste(rank_bg, images["rank"].resize((80, 80)), (100, 100), "cc")
 
     draw_stat(100, 260, f"Lv{detail['gameInfoList'][0]['level']}", "游戏等级")
@@ -173,13 +183,17 @@ async def draw_va_info_img(
         (590, 210),  # 右上
     ]
 
-    for pos, (six_val, p_six_val) in zip(data_positions, zip(six_info["data_array"], p_six_info["data_array"])):
+    for pos, (six_val, p_six_val) in zip(
+        data_positions, zip(six_info["data_array"], p_six_info["data_array"])
+    ):
         dx = pos[0] - center_x
         dy = pos[1] - center_y
         distance = math.sqrt(dx**2 + dy**2)
         new_x = pos[0] + (dx / distance) * 20
         new_y = pos[1] + (dy / distance) * 20
-        draw_base.text((new_x, new_y), f"{p_six_val} | {six_val}", "white", va_font_20, "mm")
+        draw_base.text(
+            (new_x, new_y), f"{p_six_val} | {six_val}", "white", va_font_20, "mm"
+        )
 
     draw_base.text((465, 628), six_info["sub_tab_name"], "white", va_font_30, "mm")
     easy_paste(img, base_image, (750, 50))
@@ -259,7 +273,13 @@ async def draw_asset_section(
             pass
 
         item_name = item.get(name_key, "未知物品")
-        img_draw.text((x + 50, y + size[1] + 40), item_name, (255, 255, 255, 255), va_font_20, "mm")
+        img_draw.text(
+            (x + 50, y + size[1] + 40),
+            item_name,
+            (255, 255, 255, 255),
+            va_font_20,
+            "mm",
+        )
 
     y_offset += section_bottom_offset
     return y_offset
