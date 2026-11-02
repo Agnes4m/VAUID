@@ -1,7 +1,7 @@
 """VA 战绩定时推送模块"""
 
-import random
 import asyncio
+import random
 
 from gsuid_core.aps import scheduler
 from gsuid_core.logger import logger

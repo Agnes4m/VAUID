@@ -1,9 +1,9 @@
 """Playwright浏览器自动安装辅助模块"""
 
-import os
 import asyncio
+import os
 import subprocess
-from typing import Optional, AsyncIterator
+from collections.abc import AsyncIterator
 from pathlib import Path
 
 from gsuid_core.logger import logger
@@ -15,7 +15,7 @@ _PLAYWRIGHT_BROWSERS_PATH_STR = os.environ.get(
 PLAYWRIGHT_BROWSERS_PATH = Path(_PLAYWRIGHT_BROWSERS_PATH_STR)
 
 
-def get_chrome_headless_shell_executable() -> Optional[Path]:
+def get_chrome_headless_shell_executable() -> Path | None:
     """获取chrome-headless-shell可执行文件路径"""
     chrome_shell_path = (
         PLAYWRIGHT_BROWSERS_PATH

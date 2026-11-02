@@ -1,40 +1,40 @@
 import json as js
 import time
-from typing import Any, Dict, List, Union, Literal, Callable, Optional, cast
-from dataclasses import field, dataclass
-
-from httpx import AsyncClient
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Any, Literal, cast
 
 from gsuid_core.logger import logger
 from gsuid_core.models import Event
+from httpx import AsyncClient
 
+from ..database.models import ValUser
 from .api import (
     PFAPI,
+    AssetAPI,
+    CardAPI,
     GunAPI,
     MapAPI,
-    CardAPI,
-    ShopAPI,
-    ViveAPI,
-    AssetAPI,
     OnlineAPI,
     SearchAPI,
-    ValCardAPI,
+    ShopAPI,
     SummonerAPI,
-)
-from .models import (
-    Shop,
-    Vive,
-    Battle,
-    PFInfo,
-    GunInfo,
-    MapInfo,
-    CardInfo,
-    InfoBody,
-    CardOnline,
-    SummonerInfo,
+    ValCardAPI,
+    ViveAPI,
 )
 from .model.asset import AssetData
-from ..database.models import ValUser
+from .models import (
+    Battle,
+    CardInfo,
+    CardOnline,
+    GunInfo,
+    InfoBody,
+    MapInfo,
+    PFInfo,
+    Shop,
+    SummonerInfo,
+    Vive,
+)
 
 SEASON_ID = "dcde7346-4085-de4f-c463-2489ed47983b"
 DEFAULT_TIMEOUT = 300
@@ -44,8 +44,8 @@ DEFAULT_TIMEOUT = 300
 class ApiRequest:
     url: str
     method: Literal["GET", "POST"] = "GET"
-    params: Optional[Dict[str, Any]] = None
-    json: Optional[Dict[str, Any]] = None
+    params: dict[str, Any] | None = None
+    json: dict[str, Any] | None = None
     need_cookie: bool = True
 
 
@@ -53,9 +53,9 @@ class ApiRequest:
 class QueryContext:
     user_id: str
     bot_id: str
-    cookie: Optional[str] = None
-    opuid: Optional[str] = None
-    _random_cookie: Optional[str] = field(default=None, repr=False)
+    cookie: str | None = None
+    opuid: str | None = None
+    _random_cookie: str | None = field(default=None, repr=False)
 
     async def init(self):
         opuid, ck = await WeGameApi._get_cookie_by_id(self.user_id, self.bot_id)
@@ -63,7 +63,7 @@ class QueryContext:
         self.cookie = ck
         return self
 
-    async def get_random_cookie(self) -> Optional[str]:
+    async def get_random_cookie(self) -> str | None:
         if self._random_cookie is None:
             _, self._random_cookie = await WeGameApi.get_sence()
         return self._random_cookie
@@ -71,7 +71,7 @@ class QueryContext:
 
 class WeGameApi:
     ssl_verify: bool = False
-    _HEADER: Dict[str, str] = {
+    _HEADER: dict[str, str] = {
         "User-Agent": (
             "mval/1.4.1.10011 Channel/3"
             "Mozilla/5.0 (Linux; Android 9; V2171A Build/PQ3A.190605.10171107; wv)"
@@ -89,21 +89,21 @@ class WeGameApi:
         return ctx
 
     @staticmethod
-    async def _get_cookie(uid: str) -> List[str]:
+    async def _get_cookie(uid: str) -> list[str]:
         cookie = await ValUser.get_user_cookie_by_uid(uid)
         if cookie is None:
             raise Exception("No valid cookie")
         return [uid, cookie] if cookie else ["", ""]
 
     @staticmethod
-    async def _get_cookie_by_id(user_id: str, bot_id: str) -> List[str]:
+    async def _get_cookie_by_id(user_id: str, bot_id: str) -> list[str]:
         data = await ValUser.select_data(user_id, bot_id)
         if data is None:
             raise Exception("No valid uid")
         return [data.uid or "", data.cookie] if data.cookie else ["", ""]
 
     @staticmethod
-    async def get_sence() -> List[str]:
+    async def get_sence() -> list[str]:
         user_list = await ValUser.get_all_user()
         if not user_list:
             return ["", ""]
@@ -121,10 +121,10 @@ class WeGameApi:
         self,
         url: str,
         method: Literal["GET", "POST"] = "GET",
-        headers: Optional[Dict[str, str]] = None,
-        params: Optional[Dict[str, Any]] = None,
-        json: Optional[Dict[str, Any]] = None,
-    ) -> Union[Dict, int]:
+        headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
+    ) -> dict | int:
         req_headers = dict(self._HEADER)
         if headers:
             headers = {
@@ -166,10 +166,10 @@ class WeGameApi:
 
     def _parse_response(
         self,
-        data: Union[Dict, int],
-        parser: Optional[Callable[[Dict], Any]] = None,
+        data: dict | int,
+        parser: Callable[[dict], Any] | None = None,
         default_on_error: Any = "",
-    ) -> Union[Any, int]:
+    ) -> Any | int:
         if isinstance(data, int):
             return data
         if data.get("result", 0) != 0:
@@ -179,10 +179,10 @@ class WeGameApi:
     async def _request_with_fallback(
         self,
         request: ApiRequest,
-        parser: Callable[[Dict], Any],
-        cookie: Optional[str] = None,
-        random_cookie: Optional[str] = None,
-    ) -> Union[Any, int]:
+        parser: Callable[[dict], Any],
+        cookie: str | None = None,
+        random_cookie: str | None = None,
+    ) -> Any | int:
         if cookie:
             data = await self._va_request(
                 request.url,
@@ -209,7 +209,7 @@ class WeGameApi:
         )
         return self._parse_response(data, parser, default_on_error="")
 
-    async def search_player(self, key_word: str) -> Union[List[InfoBody], int]:
+    async def search_player(self, key_word: str) -> list[InfoBody] | int:
         data = await self._va_request(
             SearchAPI,
             params={
@@ -222,11 +222,11 @@ class WeGameApi:
         )
         if isinstance(data, int):
             return data
-        return cast(List[InfoBody], data["data"]["userList"])
+        return cast(list[InfoBody], data["data"]["userList"])
 
     async def get_player_info(
-        self, ctx: QueryContext, uid_list: List[str]
-    ) -> Union[SummonerInfo, int, str, None]:
+        self, ctx: QueryContext, uid_list: list[str]
+    ) -> SummonerInfo | int | str | None:
         if len(uid_list) < 1 or not ctx.cookie:
             return None
 
@@ -252,7 +252,7 @@ class WeGameApi:
             return cast(str, data.get("data", ""))
         return cast(SummonerInfo, data["data"][0])
 
-    async def get_player_card(self, uid: str) -> Union[CardInfo, int, str]:
+    async def get_player_card(self, uid: str) -> CardInfo | int | str:
         uid, ck = await self._get_cookie(uid)
         data = await self._va_request(
             CardAPI, headers={"Cookie": ck}, json={"uuid": uid, "jump_key": "mine"}
@@ -264,13 +264,13 @@ class WeGameApi:
     async def get_detail_card(
         self,
         scene: str,
-        cookie: Optional[str] = None,
-        random_cookie: Optional[str] = None,
-    ) -> Union[List[Battle], int]:
+        cookie: str | None = None,
+        random_cookie: str | None = None,
+    ) -> list[Battle] | int:
         request = ApiRequest(url=ValCardAPI, json={"scene": scene})
         return await self._request_with_fallback(
             request,
-            lambda d: cast(List[Battle], d["data"]["battle_list"]),
+            lambda d: cast(list[Battle], d["data"]["battle_list"]),
             cookie,
             random_cookie,
         )
@@ -279,9 +279,9 @@ class WeGameApi:
         self,
         uid: str,
         scene: str,
-        cookie: Optional[str] = None,
-        random_cookie: Optional[str] = None,
-    ) -> Union[CardOnline, int]:
+        cookie: str | None = None,
+        random_cookie: str | None = None,
+    ) -> CardOnline | int:
         request = ApiRequest(url=OnlineAPI, json={"uuid": uid, "scene": scene})
         return await self._request_with_fallback(
             request,
@@ -294,16 +294,16 @@ class WeGameApi:
         self,
         uid: str,
         scene: str,
-        cookie: Optional[str] = None,
-        random_cookie: Optional[str] = None,
-    ) -> Union[List[GunInfo], int]:
+        cookie: str | None = None,
+        random_cookie: str | None = None,
+    ) -> list[GunInfo] | int:
         request = ApiRequest(
             url=GunAPI,
             json={"scene": scene, "season_id": SEASON_ID, "queue_id": "255"},
         )
         return await self._request_with_fallback(
             request,
-            lambda d: cast(List[GunInfo], d["data"]["list"]),
+            lambda d: cast(list[GunInfo], d["data"]["list"]),
             cookie,
             random_cookie,
         )
@@ -312,16 +312,16 @@ class WeGameApi:
         self,
         uid: str,
         scene: str,
-        cookie: Optional[str] = None,
-        random_cookie: Optional[str] = None,
-    ) -> Union[List[MapInfo], int]:
+        cookie: str | None = None,
+        random_cookie: str | None = None,
+    ) -> list[MapInfo] | int:
         request = ApiRequest(
             url=MapAPI,
             json={"scene": scene, "season_id": SEASON_ID, "queue_id": "255"},
         )
         return await self._request_with_fallback(
             request,
-            lambda d: cast(List[MapInfo], d["data"]["list"]),
+            lambda d: cast(list[MapInfo], d["data"]["list"]),
             cookie,
             random_cookie,
         )
@@ -330,13 +330,13 @@ class WeGameApi:
         self,
         uid: str,
         scene: str,
-        cookie: Optional[str] = None,
-        random_cookie: Optional[str] = None,
-    ) -> Union[List[Vive], int]:
+        cookie: str | None = None,
+        random_cookie: str | None = None,
+    ) -> list[Vive] | int:
         request = ApiRequest(url=ViveAPI, json={"scene": scene})
         return await self._request_with_fallback(
             request,
-            lambda d: cast(List[Vive], d["data"]["list"]),
+            lambda d: cast(list[Vive], d["data"]["list"]),
             cookie,
             random_cookie,
         )
@@ -345,16 +345,16 @@ class WeGameApi:
         self,
         uid: str,
         scene: str,
-        cookie: Optional[str] = None,
-        random_cookie: Optional[str] = None,
-    ) -> Union[List[PFInfo], int]:
+        cookie: str | None = None,
+        random_cookie: str | None = None,
+    ) -> list[PFInfo] | int:
         request = ApiRequest(
             url=PFAPI,
             json={"scene": scene, "season_id": SEASON_ID, "queue_id": "255"},
         )
         return await self._request_with_fallback(
             request,
-            lambda d: cast(List[PFInfo], d["data"]["list"]),
+            lambda d: cast(list[PFInfo], d["data"]["list"]),
             cookie,
             random_cookie,
         )
@@ -363,9 +363,9 @@ class WeGameApi:
         self,
         uid: str,
         scene: str,
-        cookie: Optional[str] = None,
-        random_cookie: Optional[str] = None,
-    ) -> Union[List[Shop], int]:
+        cookie: str | None = None,
+        random_cookie: str | None = None,
+    ) -> list[Shop] | int:
         request = ApiRequest(
             url=ShopAPI,
             json={
@@ -377,7 +377,7 @@ class WeGameApi:
         )
         return await self._request_with_fallback(
             request,
-            lambda d: cast(List[Shop], d["data"]),
+            lambda d: cast(list[Shop], d["data"]),
             cookie,
             random_cookie,
         )
@@ -385,9 +385,9 @@ class WeGameApi:
     async def get_asset(
         self,
         scene: str,
-        cookie: Optional[str] = None,
-        random_cookie: Optional[str] = None,
-    ) -> Union[AssetData, int]:
+        cookie: str | None = None,
+        random_cookie: str | None = None,
+    ) -> AssetData | int:
         request = ApiRequest(
             url=AssetAPI,
             json={
