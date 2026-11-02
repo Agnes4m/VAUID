@@ -1,31 +1,31 @@
-from typing import List, Literal, Optional, TypedDict
+from typing import Literal, TypedDict
 
 
 class LoginData(TypedDict):
-    openid: List[str]
+    openid: list[str]
     """用户的 id"""
-    appid: List[str]
+    appid: list[str]
     """用户的 appid"""
-    access_token: List[str]
+    access_token: list[str]
     """用户的 access_token"""
-    pay_token: List[str]
-    key: List[str]
-    browser: List[str]
+    pay_token: list[str]
+    key: list[str]
+    browser: list[str]
     """0"""
-    browser_error: List[str]
+    browser_error: list[str]
     """0"""
-    status_os: List[str]
-    sdkv: List[str]
-    status_machine: List[str]
+    status_os: list[str]
+    sdkv: list[str]
+    status_machine: list[str]
     """用户的 status_machine"""
-    update_auth: List[str]
+    update_auth: list[str]
     """1"""
-    has_auth: List[str]
+    has_auth: list[str]
     """1"""
-    auth_time: List[str]
-    page_type: List[str]
+    auth_time: list[str]
+    page_type: list[str]
     """1"""
-    redirect_uri_key: List[str]
+    redirect_uri_key: list[str]
 
 
 class ResultInfo(TypedDict):
@@ -48,13 +48,13 @@ class GameInfo(TypedDict):
     """VA"""
     level: int
     """游戏等级"""
-    tier: Optional[str]
+    tier: str | None
     """段位"""
     gameColor: str
     """游戏颜色？"""
-    content: Optional[str]
+    content: str | None
     """游戏段位内容"""
-    gameId: Optional[str]
+    gameId: str | None
     """不知道"""
 
     league_point: str
@@ -74,7 +74,7 @@ class SummonerInfo(TypedDict):
     """背景图 url"""
     appNum: str
     """qq 号"""
-    gameInfoList: List[GameInfo]
+    gameInfoList: list[GameInfo]
 
 
 class FeedBase(TypedDict):
@@ -106,13 +106,13 @@ class InfoBody(TypedDict):
     """默认不是不知道是啥"""
     isVip: bool
     """默认 false"""
-    tag: List[Tag_point]
+    tag: list[Tag_point]
     isOnline: bool
     """是否在线"""
 
 
 class InfoBodyList(TypedDict):
-    userList: List[InfoBody]
+    userList: list[InfoBody]
 
 
 class FeedNews(TypedDict):
@@ -165,7 +165,7 @@ class tc(TypedDict):
 
 
 class LeftData(TypedDict):
-    list: List[tc]
+    list: list[tc]
     image_url: str
     """段位图片"""
     title: str
@@ -173,7 +173,7 @@ class LeftData(TypedDict):
 
 
 class RightData(TypedDict):
-    list: List[tc]
+    list: list[tc]
     image_url: str
     """武器图片"""
     title: str
@@ -213,11 +213,11 @@ class CardUrl(TypedDict):
     """分享或复制按钮 url"""
     qr_code_url: str
     """二维码"""
-    left_data: Optional[LeftData]
-    middle_data: Optional[tc]
+    left_data: LeftData | None
+    middle_data: tc | None
     """KAST"""
-    right_data: Optional[RightData]
-    round_win_rate: Optional[tc]
+    right_data: RightData | None
+    round_win_rate: tc | None
     """回合胜率"""
     card_switch_tips: str
     """无"""
@@ -231,7 +231,7 @@ class CardInfo(TypedDict):
     has_role: int
     """是否有角色？"""
     role_info: RoleInfo
-    tools: List[Tool]
+    tools: list[Tool]
     scene: str
     """场景"""
     card_visible: int
@@ -246,7 +246,7 @@ class CardInfo(TypedDict):
 
 
 class ListInfo(TypedDict):
-    list: List[tc]
+    list: list[tc]
     image_url: str
     """图片"""
     title: str
@@ -463,7 +463,7 @@ class Battle(TypedDict):
     """是否好友"""
     competitive_tier: Competitve
     """排位信息"""
-    achievement: List[Achievement]
+    achievement: list[Achievement]
     """成就信息"""
 
 
@@ -472,7 +472,7 @@ class ValBattle(TypedDict):
 
     next_baton: str
     """下一把武器 uid"""
-    battle_list: List[Battle]
+    battle_list: list[Battle]
     msg: str
     """两个月内的记录"""
 
@@ -486,7 +486,7 @@ class Header(TypedDict):
     - 1006 能力图
     """
     title: str
-    tips: List[str]
+    tips: list[str]
     """提示信息"""
     isShowIcon: bool
     """是否显示图标"""
@@ -497,17 +497,17 @@ class tv(TypedDict):
 
     title: str
     """标题 | 变化趋势"""
-    values: List[int]
+    values: list[int]
     """段位趋势"""
-    heights: List[int]
+    heights: list[int]
     """段位高度"""
-    x: List[int]
+    x: list[int]
     """段位坐标 (0123456789)"""
-    y: List[int]
+    y: list[int]
     """段位坐标 (段位)"""
-    rate: List[List[int]]
+    rate: list[list[int]]
     """段位坐标 (xy)"""
-    max_point: List[int]
+    max_point: list[int]
     """段位最高坐标 (xy)"""
     max_value_text: str
     """段位最高名称"""
@@ -525,11 +525,11 @@ class Radar(TypedDict):
     sub_tab_name: str
     """位置名称 | 决斗 | 先锋 | 控场 | 哨卫"""
     desc: str
-    data_array: List[str]
+    data_array: list[str]
     """六边形数据值"""
-    proportion_array: List[int]
+    proportion_array: list[int]
     """六边形数据长度"""
-    desc_array: List[str]
+    desc_array: list[str]
     """六边形数据名称"""
 
     tips_bg_color: str
@@ -547,7 +547,7 @@ class ts(TypedDict):
 
 
 class RadarChart(TypedDict):
-    tabs: List[Radar]
+    tabs: list[Radar]
     """同段位水平"""
     player_dict: Radar
     """个人水平"""
@@ -564,15 +564,15 @@ class RadarChart(TypedDict):
 class Body(TypedDict):
     """头部信息"""
 
-    first_list: List[tc]
+    first_list: list[tc]
     """
     - 当前段位 白银
     - 赛季最高 白银
     - 近期表现 A
     """
-    line_chart_list: List[tv]
+    line_chart_list: list[tv]
     """段位趋势 2 个"""
-    second_list: List[tc]
+    second_list: list[tc]
     """
     - 胜率
     - 平均战斗
@@ -583,7 +583,7 @@ class Body(TypedDict):
 
     radar_chart: RadarChart
     """能力图"""
-    shooting: List[ts]
+    shooting: list[ts]
     """
     - 精准击败
     - 身体
@@ -705,4 +705,4 @@ class Shop(TypedDict):
     """商店结束时间戳"""
     cur_ts: float
     """商店当前时间戳"""
-    list: List[ShopDay]
+    list: list[ShopDay]

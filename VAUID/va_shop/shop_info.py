@@ -1,11 +1,9 @@
-from typing import List, Union
-
 from gsuid_core.logger import logger
 from gsuid_core.models import Event
 
-from ..utils.va_api import va_api
 from ..utils.api.models import Shop, SummonerInfo
 from ..utils.error_reply import get_error
+from ..utils.va_api import va_api
 
 
 async def time_delta(m_time: float) -> str:
@@ -14,7 +12,7 @@ async def time_delta(m_time: float) -> str:
     return f"{hours}小时{minutes}分钟{seconds}秒"
 
 
-async def get_va_shop_img(ev: Event, uid: str) -> Union[str, bytes]:
+async def get_va_shop_img(ev: Event, uid: str) -> str | bytes:
     ctx = await va_api.create_context(ev)
 
     detail = await va_api.get_player_info(ctx, [uid])
@@ -42,7 +40,7 @@ async def get_va_shop_img(ev: Event, uid: str) -> Union[str, bytes]:
     return await draw_va_shop_img(detail, shop_list)
 
 
-async def draw_va_shop_img(detail: SummonerInfo, shop_list: List[Shop]) -> str:
+async def draw_va_shop_img(detail: SummonerInfo, shop_list: list[Shop]) -> str:
     msg: str = ""
     day_list = next((i for i in shop_list if i["key"] == "dailystore"), None)
     king_list = next((i for i in shop_list if i["key"] == "kingdomstore"), None)

@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, TypedDict
+from typing import Any, TypedDict
 
 
 # --- 资金相关 (Money) ---
@@ -15,7 +15,7 @@ class MoneyData(TypedDict):
     more: str
     intent: str
     show_new_icon: bool
-    list: List[MoneyItem]
+    list: list[MoneyItem]
 
 
 # --- 英雄相关 (Agent) ---
@@ -32,7 +32,7 @@ class AgentItem(TypedDict):
     unlock_time: str
     lock_status: int
     intent: str
-    record_stones: Optional[Any]
+    record_stones: Any | None
     is_record_stones_agent: bool
     icon_grey: str
 
@@ -44,7 +44,7 @@ class AgentData(TypedDict):
     more: str
     intent: str
     show_new_icon: bool
-    list: List[AgentItem]
+    list: list[AgentItem]
 
 
 # --- 皮肤图鉴相关 (Skin) ---
@@ -75,7 +75,7 @@ class SkinData(TypedDict):
     more: str
     intent: str
     show_new_icon: bool
-    list: List[SkinItem]
+    list: list[SkinItem]
 
 
 # --- 收藏品相关 (Spray, Card, Charm) ---
@@ -94,7 +94,7 @@ class CollectionData(TypedDict):
     more: str
     intent: str
     show_new_icon: bool
-    list: List[CollectionItem]
+    list: list[CollectionItem]
 
 
 # --- 枪卡相关 (Skin Card) ---
@@ -111,15 +111,15 @@ class EvolutionConf(TypedDict):
     desc: str
     required_task_num: str
     resource_imgname: str
-    resource_conf: Optional[ResourceConf]
-    index: Optional[int]
+    resource_conf: ResourceConf | None
+    index: int | None
 
 
 class UpgradeConf(TypedDict):
     icon: str
     unlock_icon: str
     task_id: str
-    index: Optional[int]
+    index: int | None
 
 
 class SkinCardItem(TypedDict):
@@ -128,7 +128,7 @@ class SkinCardItem(TypedDict):
     bg_img: str
     list_img: str
     skin_limit: int
-    skin_list_str: List[str]
+    skin_list_str: list[str]
     name: str
     desc: str
     sub_desc: str
@@ -139,7 +139,7 @@ class SkinCardItem(TypedDict):
     limit_num: int
     resource_link: str
     resource_type: str
-    resource_img_name_list: List[Any]
+    resource_img_name_list: list[Any]
     resource_imgname_list: str
     status: int
     acquire_time: int
@@ -148,8 +148,8 @@ class SkinCardItem(TypedDict):
     upgrade_conf: str
     evolution_conf: str
     base_resource: str
-    upgrade_conf_list: List[UpgradeConf]
-    evolution_conf_list: List[EvolutionConf]
+    upgrade_conf_list: list[UpgradeConf]
+    evolution_conf_list: list[EvolutionConf]
     base_resource_conf: ResourceConf
     is_lock: bool
     is_wear: bool
@@ -163,7 +163,7 @@ class SkinCardData(TypedDict):
     more: str
     intent: str
     show_new_icon: bool
-    list: List[SkinCardItem]
+    list: list[SkinCardItem]
 
 
 # --- 简单模块 (Skin Assemble, Stone Overview) ---

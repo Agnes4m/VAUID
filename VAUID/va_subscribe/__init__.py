@@ -2,26 +2,26 @@
 
 from typing import Any, Dict, Optional
 
-from gsuid_core.sv import SV
 from gsuid_core.bot import Bot
 from gsuid_core.logger import logger
 from gsuid_core.models import Event
 from gsuid_core.subscribe import gs_subscribe
+from gsuid_core.sv import SV
 
-from ..utils.va_api import va_api
 from ..utils.database.models import ValBind, ValUser
+from ..utils.va_api import va_api
 
 va_watch_record = SV("VA战绩订阅")
 
 
-def _parse_detail(detail: Any) -> Optional[Dict[str, Any]]:
+def _parse_detail(detail: Any) -> dict[str, Any] | None:
     """安全解析detail响应"""
     if isinstance(detail, dict) and "gameInfoList" in detail:
         return detail
     return None
 
 
-def _parse_card(card: Any) -> Optional[Dict[str, Any]]:
+def _parse_card(card: Any) -> dict[str, Any] | None:
     """安全解析card响应"""
     if isinstance(card, dict) and "role_info" in card:
         return card
@@ -114,7 +114,7 @@ async def cancel_subscribe_va_record(bot: Bot, ev: Event):
 
 async def check_new_battle(
     uid: str, user_id: str, bot_id: str
-) -> tuple[bool, Optional[Dict[str, Any]]]:
+) -> tuple[bool, dict[str, Any] | None]:
     """
     检查用户是否有新战绩
 

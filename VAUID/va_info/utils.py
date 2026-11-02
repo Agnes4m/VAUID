@@ -1,37 +1,36 @@
-import math
 import asyncio
-from typing import Dict, List, Tuple, Literal, Optional
-from pathlib import Path
+import math
 from functools import lru_cache
+from pathlib import Path
+from typing import Literal
 
+from gsuid_core.data_store import get_res_path
+from gsuid_core.logger import logger
+from gsuid_core.utils.image.image_tools import easy_paste
+from gsuid_core.utils.image.utils import download_pic_to_image
 from PIL import Image, ImageDraw
 from PIL.ImageDraw import ImageDraw as ImageDrawType
 
-from gsuid_core.logger import logger
-from gsuid_core.data_store import get_res_path
-from gsuid_core.utils.image.utils import download_pic_to_image
-from gsuid_core.utils.image.image_tools import easy_paste
-
-from ..utils.va_font import va_font_20, va_font_30, va_font_42
 from ..utils.api.models import (
-    Vive,
     Battle,
-    PFInfo,
     GunInfo,
+    PFInfo,
+    Vive,
 )
+from ..utils.va_font import va_font_20, va_font_30, va_font_42
 
 TEXTURE = Path(__file__).parent / "texture2d"
 
 
 # 图片缓存字典
-_image_cache: Dict[str, Image.Image] = {}
+_image_cache: dict[str, Image.Image] = {}
 
 
 async def save_img(
     img_url: str,
     img_type: str,
-    size: Optional[Tuple[int, int]] = None,
-    rename: Optional[str] = None,
+    size: tuple[int, int] | None = None,
+    rename: str | None = None,
 ):
     """下载图片并缓存以读取"""
     img_path = get_res_path("VAUID") / img_type / img_url.split("/")[-1]
@@ -74,7 +73,7 @@ def get_cached_texture(filename: str) -> Image.Image:
 
 class DrawUtils:
     @staticmethod
-    async def draw_hero_section(left_bg: Image.Image, hero: List[PFInfo]):
+    async def draw_hero_section(left_bg: Image.Image, hero: list[PFInfo]):
         """绘制英雄信息部分"""
         hero_bg = get_cached_texture("bg_val_mine_header.png")
         hero_draw = ImageDraw.Draw(hero_bg)
@@ -124,7 +123,7 @@ class DrawUtils:
         easy_paste(left_bg, hero_bg, (20, 40), "lt")
 
     @staticmethod
-    async def draw_weapon_section(left_bg: Image.Image, gun: List[GunInfo]):
+    async def draw_weapon_section(left_bg: Image.Image, gun: list[GunInfo]):
         """绘制武器信息部分"""
         if gun is None:
             return
@@ -183,7 +182,7 @@ class DrawUtils:
 
     @staticmethod
     def draw_vive_section(
-        right_bg: Image.Image, right_draw: ImageDrawType, vive: List[Vive]
+        right_bg: Image.Image, right_draw: ImageDrawType, vive: list[Vive]
     ):
         """绘制射击数据部分"""
         if vive is None:
@@ -208,7 +207,7 @@ class DrawUtils:
     async def draw_battle_section(
         right_bg: Image.Image,
         right_draw: ImageDrawType,
-        valcard: Optional[List[Battle]],
+        valcard: list[Battle] | None,
     ):
         """绘制战绩部分"""
         if valcard is None or isinstance(valcard, int):
@@ -223,7 +222,7 @@ class DrawUtils:
         for battle in battles_to_show:
             image_tasks.append(save_img(battle["image_url"], "head2"))
             if battle["score_level"].get("level", "").strip():
-                icon_key_map: Dict[
+                icon_key_map: dict[
                     str,
                     Literal["head_icon_win", "head_icon_fail", "head_icon_draw"],
                 ] = {
@@ -342,10 +341,10 @@ class DrawUtils:
 
     @staticmethod
     def draw_hexagonal_panel(
-        proportion_array: List[float],
+        proportion_array: list[float],
         image: Image.Image,
-        fill_color: Optional[Tuple[int, int, int, int]] = (255, 255, 255, 100),
-        outline_color: Optional[Tuple[int, int, int, int]] = (0, 0, 0, 255),
+        fill_color: tuple[int, int, int, int] | None = (255, 255, 255, 100),
+        outline_color: tuple[int, int, int, int] | None = (0, 0, 0, 255),
     ):
         """绘制六边形面板
 
@@ -378,7 +377,7 @@ class DrawUtils:
 
 
 @lru_cache(maxsize=256)
-def hex_to_rgba(hex_color: str, alpha: int = 255) -> Tuple[int, int, int, int]:
+def hex_to_rgba(hex_color: str, alpha: int = 255) -> tuple[int, int, int, int]:
     """将十六进制颜色转换为 RGBA，使用LRU缓存优化性能"""
     hex_color = hex_color.lstrip("#")
     r = int(hex_color[0:2], 16)

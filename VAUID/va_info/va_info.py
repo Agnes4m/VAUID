@@ -1,22 +1,20 @@
 import asyncio
-from typing import List, Union, Optional
-
-from PIL import Image, ImageDraw
 
 from gsuid_core.logger import logger
 from gsuid_core.models import Event
 from gsuid_core.utils.image.convert import convert_img
-from gsuid_core.utils.image.image_tools import easy_paste, draw_pic_with_ring
+from gsuid_core.utils.image.image_tools import draw_pic_with_ring, easy_paste
+from PIL import Image, ImageDraw
 
-from .draw import draw_va_info_img, draw_asset_section
-from .utils import save_img, get_cached_texture
+from ..utils.api.models import Battle, CardOnline, GunInfo, PFInfo, Vive
+from ..utils.error_reply import get_error
 from ..utils.va_api import va_api
 from ..utils.va_font import va_font_20, va_font_42
-from ..utils.api.models import Vive, Battle, PFInfo, GunInfo, CardOnline
-from ..utils.error_reply import get_error
+from .draw import draw_asset_section, draw_va_info_img
+from .utils import get_cached_texture, save_img
 
 
-async def get_va_info_img(ev: Event, uid: str) -> Union[str, bytes]:
+async def get_va_info_img(ev: Event, uid: str) -> str | bytes:
     ctx = await va_api.create_context(ev)
 
     detail = await va_api.get_player_info(ctx, [uid])
@@ -47,13 +45,13 @@ async def get_va_info_img(ev: Event, uid: str) -> Union[str, bytes]:
 
     cardetail_raw, online_raw, gun_raw, hero_raw, vive_raw = results
 
-    cardetail: Optional[List[Battle]] = None
+    cardetail: list[Battle] | None = None
     if isinstance(cardetail_raw, (int, str, BaseException)):
         logger.info(f"cardetail error: {cardetail_raw}")
     else:
         cardetail = cardetail_raw
 
-    online: Optional[CardOnline] = None
+    online: CardOnline | None = None
     if isinstance(online_raw, (int, BaseException)):
         logger.error(
             f"online error: {get_error(online_raw) if isinstance(online_raw, int) else online_raw}"
@@ -66,21 +64,21 @@ async def get_va_info_img(ev: Event, uid: str) -> Union[str, bytes]:
         return "获取武器数据失败"
     if isinstance(gun_raw, int):
         return get_error(gun_raw)
-    gun: List[GunInfo] = gun_raw
+    gun: list[GunInfo] = gun_raw
 
     if isinstance(hero_raw, BaseException):
         logger.error(f"hero error: {hero_raw}")
         return "获取英雄数据失败"
     if isinstance(hero_raw, int):
         return get_error(hero_raw)
-    hero: List[PFInfo] = hero_raw
+    hero: list[PFInfo] = hero_raw
 
     if isinstance(vive_raw, BaseException):
         logger.error(f"vive error: {vive_raw}")
         return "获取 vive 数据失败"
     if isinstance(vive_raw, int):
         return get_error(vive_raw)
-    vive: List[Vive] = vive_raw
+    vive: list[Vive] = vive_raw
 
     if not detail.get("gameInfoList"):
         return "报错了，检查控制台"
@@ -88,7 +86,7 @@ async def get_va_info_img(ev: Event, uid: str) -> Union[str, bytes]:
     return await draw_va_info_img(detail, card, cardetail, online, gun, hero, vive)
 
 
-async def get_va_asset_img(ev: Event, uid: str) -> Union[str, bytes]:
+async def get_va_asset_img(ev: Event, uid: str) -> str | bytes:
     ctx = await va_api.create_context(ev)
 
     detail = await va_api.get_player_info(ctx, [uid])

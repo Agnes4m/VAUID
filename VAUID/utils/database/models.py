@@ -1,11 +1,11 @@
-from typing import TypeVar, Optional
+from typing import TypeVar
 
-from sqlmodel import Field
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from gsuid_core.webconsole.mount_app import PageSchema, GsAdminModel, site
-from gsuid_core.utils.database.startup import exec_list
 from gsuid_core.utils.database.base_models import Bind, User, with_session
+from gsuid_core.utils.database.startup import exec_list
+from gsuid_core.webconsole.mount_app import GsAdminModel, PageSchema, site
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import Field
+from typing_extensions import Self
 
 exec_list.extend(
     [
@@ -19,21 +19,21 @@ T_ValUser = TypeVar("T_ValUser", bound="ValUser")
 
 
 class ValBind(Bind):
-    uid: Optional[str] = Field(default=None, title="VAUID")
+    uid: str | None = Field(default=None, title="VAUID")
 
     model_config = {"table": True}  # type: ignore
 
 
 class ValUser(User):
-    uid: Optional[str] = Field(default=None, title="VAUID")
-    latest_battle_id: Optional[str] = Field(default=None, title="最新战绩ID")
-    latest_battle_time: Optional[int] = Field(default=0, title="最新战绩时间")
+    uid: str | None = Field(default=None, title="VAUID")
+    latest_battle_id: str | None = Field(default=None, title="最新战绩ID")
+    latest_battle_time: int | None = Field(default=0, title="最新战绩时间")
 
     model_config = {"table": True}  # type: ignore
 
     @classmethod
     @with_session
-    async def get_latest_battle_id(cls, user_id: str, bot_id: str) -> Optional[str]:
+    async def get_latest_battle_id(cls, user_id: str, bot_id: str) -> str | None:
         """获取用户最新战绩ID"""
         data = await cls.select_data(user_id, bot_id)
         return data.latest_battle_id if data else None
@@ -59,13 +59,13 @@ class ValUser(User):
     @classmethod
     @with_session
     async def insert_or_update_user(
-        cls: type[T_ValUser],
+        cls,
         session: AsyncSession,
         bot_id: str,
         user_id: str,
         uid: str,
         cookie: str,
-    ) -> T_ValUser:
+    ) -> Self:
         obj = await cls.base_select_data(
             bot_id=bot_id,
             user_id=user_id,

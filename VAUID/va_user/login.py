@@ -1,7 +1,4 @@
-from typing import Dict, Optional
-
 import aiohttp
-
 from gsuid_core.logger import logger
 
 MVAL_API = (
@@ -9,7 +6,7 @@ MVAL_API = (
 )
 
 
-async def exchange_val_token(openid: str, access_token: str) -> Optional[Dict]:
+async def exchange_val_token(openid: str, access_token: str) -> dict | None:
     payload = {
         "clienttype": 9,
         "config_params": {"client_dev_name": "23117RK66C", "lang_type": 0},

@@ -1,38 +1,36 @@
 """VA 信息绘图模块 - 负责绘制用户信息图片"""
 
-import math
 import asyncio
-from typing import List, Tuple, Union, Optional
-
-from PIL import Image, ImageDraw
+import math
 
 from gsuid_core.logger import logger
 from gsuid_core.utils.image.convert import convert_img
-from gsuid_core.utils.image.image_tools import easy_paste, draw_pic_with_ring
+from gsuid_core.utils.image.image_tools import draw_pic_with_ring, easy_paste
+from PIL import Image, ImageDraw
 
-from .utils import DrawUtils, save_img, get_cached_texture
-from ..utils.va_font import va_font_20, va_font_30, va_font_42
+from ..utils.api.model.asset import AgentData, CollectionData, SkinData
 from ..utils.api.models import (
-    Vive,
     Battle,
-    PFInfo,
-    GunInfo,
     CardInfo,
     CardOnline,
+    GunInfo,
+    PFInfo,
     SummonerInfo,
+    Vive,
 )
-from ..utils.api.model.asset import SkinData, AgentData, CollectionData
+from ..utils.va_font import va_font_20, va_font_30, va_font_42
+from .utils import DrawUtils, get_cached_texture, save_img
 
 
 async def draw_va_info_img(
     detail: SummonerInfo,
     card: CardInfo,
-    valcard: Optional[List[Battle]],
-    online: Optional[CardOnline],
-    gun: List[GunInfo],
-    hero: List[PFInfo],
-    vive: List[Vive],
-) -> Union[bytes, str]:
+    valcard: list[Battle] | None,
+    online: CardOnline | None,
+    gun: list[GunInfo],
+    hero: list[PFInfo],
+    vive: list[Vive],
+) -> bytes | str:
     """绘制 VA 用户信息图片
 
     Args:
@@ -215,10 +213,10 @@ async def draw_va_info_img(
 async def draw_asset_section(
     img: Image.Image,
     img_draw: ImageDraw.ImageDraw,
-    section_data: Union[SkinData, AgentData, CollectionData],
+    section_data: SkinData | AgentData | CollectionData,
     section_name: str,
     y_offset: int,
-    size: Tuple[int, int] = (80, 80),
+    size: tuple[int, int] = (80, 80),
     icon_key: str = "icon",
     name_key: str = "name",
     title_offset: int = 50,
